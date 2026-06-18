@@ -92,7 +92,7 @@ def weeToolsUI():
 	addRow(f, [('+A', 'addA()', 'gray'), ('+B', 'addB()', 'gray'), ('+C', 'addC()', 'gray'), ('+D', 'addD()', 'gray'), ('+E', 'addE()', 'gray'), ('+F', 'addF()', 'gray'), ('+G', 'addG()', 'gray'), ('+H', 'addH()', 'gray')])
 	f = section('Render', collapse=False)
 	addLabel(f, '  Output')
-	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('1\nFrame', 'oneframerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
+	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
 	addLabel(f, '  Lights')
 	addRow(f, [('Dome', 'domelgt()', 'amber'), ('Area', 'arealgt()', 'amber'), ('Point', 'pointlgt()', 'amber')])
 	addRow(f, [('Spot', 'spotlgt()', 'amber'), ('Direct.', 'directlgt()', 'amber'), ('Mesh\nLight', 'meshlgt()', 'amber')])
@@ -709,27 +709,6 @@ def prerender():
 	mc.setAttr("redshiftOptions.numGIBounces", 0)
 	mc.setAttr('redshiftOptions.bruteForceGINumRays', 0)
 	mc.setAttr('redshiftOptions.denoiseEngine', 0)
-
-def oneframerender():
-	width =float(1500)
-	height = float(1500)
-	deviceAspect = width / height
-	mc.setAttr('defaultResolution.height', height)
-	mc.setAttr('defaultResolution.width', width)
-	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('defaultResolution.deviceAspectRatio',deviceAspect)
-	rpath = '<scene>/beauty'
-	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr("redshiftOptions.imageFormat", 2)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 4)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 1024)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.085)
-	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
-	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 3)
-	mc.setAttr('redshiftOptions.bruteForceGINumRays', 2048)
-	mc.setAttr('redshiftOptions.denoiseEngine', 3)
 
 def domelgt(): ##################################### Dome light creation
 	mel.eval('redshiftCreateDomeLight;')
