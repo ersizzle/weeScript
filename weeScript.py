@@ -1,349 +1,122 @@
-#to execute from another location, enter code below in to MEL :
-#python("execfile(r'Z:/HomurGumur/Trash/erbay/weeScript.py')");
-#python("execfile('C:/Users/er/Downloads/weeScript.py')")
+ #to load this tool from GitHub, paste this into Maya's Python script editor:
+#import urllib.request, __main__; exec(urllib.request.urlopen('https://raw.githubusercontent.com/ersizzle/weeScript/master/weeScript.py').read().decode('utf-8'), __main__.__dict__)
 import maya.cmds as mc
 import maya.mel as mel
+
+def _guard(cmd):
+	#Run a button command, turning an empty/wrong selection into a friendly
+	#warning instead of a raw traceback in the script editor.
+	try:
+		eval(cmd)
+	except IndexError:
+		mc.warning('weeTools: select the right object(s) for this action first.')
+	except Exception as e:
+		mc.warning('weeTools: ' + str(e))
 
 ui='weeTools'
 title = ui
 
 if mc.workspaceControl(ui, q=True, exists=True):
-	mc.workspaceControl(ui, e=True, close=True)
 	mc.deleteUI(ui, control=True)
+if mc.window(ui, exists=True):
+	mc.deleteUI(ui)
 
 def weeToolsUI():
 	global field1
 	global field2
-	mainLayout = mc.columnLayout(
-				width = 246,
-				height = 790,
-				rowSpacing= 0,
-				columnOffset=('both', 0) )
-	modelfLayout = mc.frameLayout(l = "  MODELING", parent = mainLayout, cll =1, cl =0, bgc= [0.21, 0.21, 0.21])
-	rowLayoutA1 = mc.rowColumnLayout(
-						parent = modelfLayout,
-						numberOfColumns = 5,
-						h=38,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,52), (2,51), (3,50), (4,49), (5,50)]
-						)
-	rowLayoutA2 = mc.rowColumnLayout(
-						parent = modelfLayout,
-						numberOfColumns = 4,
-						h=38,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2)],
-						columnWidth = [(1,60), (2,60), (3,60), (4,60)]
-						)
-	rowLayoutA3 = mc.rowColumnLayout(
-						parent = modelfLayout,
-						numberOfColumns = 4,
-						h=38,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2)],
-						columnWidth = [(1,60), (2,60), (3,60), (4,60)]
-						)
-	shadingfLayout = mc.frameLayout(l = "  SHADING", parent = mainLayout, cll =1, cl =0, bgc= [0.21, 0.21, 0.21])
-	rowLayoutB1 = mc.rowColumnLayout(
-						parent = shadingfLayout,
-						numberOfColumns = 6,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2)],
-						columnWidth = [(1,32), (2,32), (3,34), (4,48), (5,48), (6,38)]
-						)
-	rowLayoutB2 = mc.rowColumnLayout(
-						parent = shadingfLayout,
-						numberOfColumns = 7,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2), (7,'both',2)],
-						columnWidth = [(1,30), (2,30), (3,30), (4,30), (5,30), (6,36), (7,36)]
-						)
-	rowLayoutB21 = mc.rowColumnLayout(
-						parent = shadingfLayout,
-						numberOfColumns = 7,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2), (7,'both',2)],
-						columnWidth = [(1,30), (2,30), (3,30), (4,30), (5,30), (6,44), (7,40)]
-						)
-	shadingffLayout = mc.frameLayout(l = "  PRE-SHADING", parent = shadingfLayout, cll =1, cl =1, bgc= [0.21, 0.21, 0.21])
-	rowLayoutB3 = mc.rowColumnLayout(
-						parent = shadingffLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,44), (2,44), (3,44), (4,54), (5,50)]
-						)
-	rowLayoutB4 = mc.rowColumnLayout(
-						parent = shadingffLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,46), (2,36), (3,36), (4,44), (5,44)]
-						)
-	rowLayoutB5 = mc.rowColumnLayout(
-						parent = shadingffLayout,
-						numberOfColumns = 4,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2)],
-						columnWidth = [(1,46), (2,36), (3,36), (4,44)]
-						)
-	namingfLayout = mc.frameLayout(l = "  NAME", parent = mainLayout, cll =1, cl =0, bgc= [0.21, 0.21, 0.21])
-	rowLayoutC1 = mc.rowColumnLayout(
-						parent = namingfLayout,
-						numberOfColumns = 1,
-						columnOffset = [(1,'both',2)],
-						columnWidth = [(1,235)]
-						)
-	rowLayoutC1A = mc.rowColumnLayout(
-						parent = namingfLayout,
-						numberOfColumns = 1,
-						columnOffset = [(1,'both',2)],
-						columnWidth = [(1,235)]
-						)
-	rowLayoutC1B = mc.rowColumnLayout(
-						parent = namingfLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,48),(2,48),(3,48),(4,48),(5,48)]
-						)
-	namingffLayout = mc.frameLayout(l = "  PRE-NAME", parent = namingfLayout, cll =1, cl =1, bgc= [0.21, 0.21, 0.21])
-	rowLayoutC2 = mc.rowColumnLayout(
-						parent = namingffLayout,
-						numberOfColumns = 6,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2)],
-						columnWidth = [(1,41), (2,41), (3,41), (4,43), (5,37), (6,37)]
-						)
-	rowLayoutC5 = mc.rowColumnLayout(
-						parent = namingffLayout,
-						numberOfColumns = 8,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2), (7,'both',2)],
-						columnWidth = [(1,28), (2,32), (3,28), (4,28), (5,36), (6,38), (7,36)]
-						)
-	rowLayoutC6 = mc.rowColumnLayout(
-						parent = namingffLayout,
-						numberOfColumns = 8,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2), (7,'both',2), (8,'both',2)],
-						columnWidth = [(1,29), (2,29), (3,29), (4,29), (5,29), (6,29), (7,29), (8,29)]
-						)
-	renderfLayout = mc.frameLayout(l = "  RENDER", parent = mainLayout, cll =1, cl =0, bgc= [0.21, 0.21, 0.21])
-	rowLayoutD1 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 6,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2)],
-						columnWidth = [(1,24), (2,34), (3,30), (4,35), (5,42), (6,54)]
-						)
-	rowLayoutD2 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 4,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2)],
-						columnWidth = [(1,52), (2,52), (3,41), (4,52)]
-						)
-	rowLayoutD3 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,51), (2,46), (3,48), (4,44), (5,51)]
-						)
-	rowLayoutD4 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 6,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2)],
-						columnWidth = [(1,40), (2,40), (3,40), (4,40), (5,40), (6,40)]
-						)
-	rowLayoutD5 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 4,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2)],
-						columnWidth = [(1,64), (2,76), (3,56), (4,45)]
-						)
-	rowLayoutD6 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 8,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2), (7,'both',2), (8,'both',2)],
-						columnWidth = [(1,27), (2,27), (3,27), (4,27), (5,27), (6,27), (7,30), (8,38)]
-						)
-	rowLayoutD7 = mc.rowColumnLayout(
-						parent = renderfLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,68), (2,40), (3,33), (4,42),(5,40)]
-						)
-	animationfLayout = mc.frameLayout(l = "  ANIMATION", parent = mainLayout, cll =1, cl =1, bgc= [0.21, 0.21, 0.21])
-	rowLayoutE1 = mc.rowColumnLayout(
-						parent = animationfLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,48), (2,54), (3,35), (4,54), (5,50)]
-						)
-	windowfLayout = mc.frameLayout(l = "  WINDOWS", parent = mainLayout, cll =1, cl =0, bgc= [0.21, 0.21, 0.21])
-	rowLayoutF1 = mc.rowColumnLayout(
-						parent = windowfLayout,
-						numberOfColumns = 5,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2)],
-						columnWidth = [(1,48), (2,45), (3,45), (4,48), (5,50)]
-						)
-	rowLayoutF2 = mc.rowColumnLayout(
-						parent = windowfLayout,
-						numberOfColumns = 6,
-						columnOffset = [(1,'both',2), (2,'both',2), (3,'both',2), (4,'both',2), (5,'both',2), (6,'both',2)],
-						columnWidth = [(1,41), (2,41), (3,46), (4,37), (5,42), (6,41)]
-						)
-##############################################################################################################################
-##############################################################################################################################
-##############################################################################################################################
-########################################################## BUTTONS ###########################################################
-##############################################################################################################################
-##############################################################################################################################
-##############################################################################################################################
-
-	mc.button(parent = rowLayoutA1, label = 'Freeze\nTransfo..', bgc= [0.35, 0.228, 0.228], command = 'fTrans()')
-	mc.button(parent = rowLayoutA1, label = 'Delete\nHistory', bgc= [0.35, 0.228, 0.228], command = 'dHis()')
-	mc.button(parent = rowLayoutA1, label = 'Delete\nN.Hist.', bgc= [0.35, 0.228, 0.228], command = 'dnondefHis()')
-	mc.button(parent = rowLayoutA1, label = 'Center\nPivot', bgc= [0.35, 0.228, 0.228], command = 'cPiv()')
-	mc.button(parent = rowLayoutA1, label = 'Bottom\nPivot', bgc= [0.35, 0.228, 0.228], command = 'bPiv()')
-	############################################################################################
-	mc.button(parent = rowLayoutA2, label = 'Send to\n0 0 0', bgc= [0.35, 0.228, 0.228], command = 'zero()')
-	mc.button(parent = rowLayoutA2, label = 'Copy\nAttributes', bgc= [0.35, 0.228, 0.228], command = 'cpyAtt()')
-	mc.button(parent = rowLayoutA2, label = 'Group', command = 'group()')
-	mc.button(parent = rowLayoutA2, label = 'Auto UV', bgc= [0.35, 0.35, 0.222], command = 'autoUV()')
-############################################################################################
-	mc.button(parent = rowLayoutA3, label = 'Bounding\nBox On', bgc= [0.15, 0.228, 0.228], command = 'box()')
-	mc.button(parent = rowLayoutA3, label = 'Bounding\nBox Off', bgc= [0.15, 0.228, 0.228], command = 'unbox()')
-	mc.button(parent = rowLayoutA3, label = 'Lock\nAttributes', bgc= [0.228, 0.228, 0.35], command = 'lock()')
-	mc.button(parent = rowLayoutA3, label = 'UnLock\nAttributes', bgc= [0.228, 0.228, 0.35], command = 'unlock()')
-############################################################################################
-	mc.button(parent = rowLayoutB1, label = 'Tess\n2', bgc= [0.305, 0.222, 0.35], command = 'tess2()')
-	mc.button(parent = rowLayoutB1, label = 'Tess\n3', bgc= [0.305, 0.222, 0.35], command = 'tess3()')
-	mc.button(parent = rowLayoutB1, label = 'Tess\n Off', bgc= [0.305, 0.222, 0.35], command = 'untess()')
-	mc.button(parent = rowLayoutB1, label = 'Displ-\nace On', bgc= [0.15, 0.228, 0.228], command = 'disp()')
-	mc.button(parent = rowLayoutB1, label = 'Displ-\nace Off', bgc= [0.15, 0.228, 0.228], command = 'undisp()')
-	mc.button(parent = rowLayoutB1, label = 'Back\nFace', bgc= [0.15, 0.228, 0.228], command = 'backface()')
-############################################################################################
-	mc.button(parent = rowLayoutB2, label = 'Mat\n1', command = 'mat1()')
-	mc.button(parent = rowLayoutB2, label = 'Mat\n2', command = 'mat2()')
-	mc.button(parent = rowLayoutB2, label = 'Mat\n3', command = 'mat3()')
-	mc.button(parent = rowLayoutB2, label = 'Mat\n4', command = 'mat4()')
-	mc.button(parent = rowLayoutB2, label = 'Mat\n5', command = 'mat5()')
-	mc.button(parent = rowLayoutB2, label = 'Prim.\nvis 1', bgc= [0.305, 0.222, 0.35], command = 'primvis()')
-	mc.button(parent = rowLayoutB2, label = 'Prim.\nvis 0', bgc= [0.305, 0.222, 0.35], command = 'unprimvis()')
-############################################################################################
-	mc.button(parent = rowLayoutB21, label = 'PBR\nD', command = 'pbrd()')
-	mc.button(parent = rowLayoutB21, label = 'PBR\nM', command = 'pbrm()')
-	mc.button(parent = rowLayoutB21, label = 'S\nRGB', command = 'setsrgb()')
-	mc.button(parent = rowLayoutB21, label = 'Lin\near', command = 'setlin()')
-	mc.button(parent = rowLayoutB21, label = 'AC\nES', command = 'aces()')
-	mc.button(parent = rowLayoutB21, label = 'texCon', command = 'texcon()')
-	mc.button(parent = rowLayoutB21, label = 'Lam\nbert', bgc= [0.3, 0.3, 0.3], command = 'matlambert()')
-############################################################################################
-	mc.button(parent = rowLayoutB3, label = 'Glass', bgc= [0.3, 0.5, 0.5], command = 'matglass()')
-	mc.button(parent = rowLayoutB3, label = 'Water', bgc= [0.3, 0.5, 0.5], command = 'matwater()')
-	mc.button(parent = rowLayoutB3, label = 'Plastic', bgc= [0.3, 0.5, 0.5], command = 'matplastic()')
-	mc.button(parent = rowLayoutB3, label = 'Aluminium', bgc= [0.3, 0.5, 0.5], command = 'mataluminium()')
-	mc.button(parent = rowLayoutB3, label = 'Copper', bgc= [0.3, 0.5, 0.5], command = 'matcopper()')
-############################################################################################
-	mc.button(parent = rowLayoutB4, label = 'Gold', bgc= [0.3, 0.5, 0.5], command = 'matgold()')
-	mc.button(parent = rowLayoutB4, label = 'Iron', bgc= [0.3, 0.5, 0.5], command = 'matiron()')
-	mc.button(parent = rowLayoutB4, label = 'Lead', bgc= [0.3, 0.5, 0.5], command = 'matlead()')
-	mc.button(parent = rowLayoutB4, label = 'Platinum', bgc= [0.3, 0.5, 0.5], command = 'matplatinum()')
-	mc.button(parent = rowLayoutB4, label = 'Silver', bgc= [0.3, 0.5, 0.5], command = 'matsilver()')
-############################################################################################
-	mc.button(parent = rowLayoutB5, label = 'Milky\nCoffee', bgc= [0.3, 0.5, 0.5], command = 'matmilky()')
-	mc.button(parent = rowLayoutB5, label = 'Jade', bgc= [0.3, 0.5, 0.5], command = 'matjade()')
-	mc.button(parent = rowLayoutB5, label = 'Paper', bgc= [0.3, 0.5, 0.5], command = 'matpaper()')
-	mc.button(parent = rowLayoutB5, label = 'Tinted\nGlass', bgc= [0.3, 0.5, 0.5], command = 'mattinted()')
-############################################################################################
-############################################################################################
-	field1 = mc.textField(parent = rowLayoutC1)
-	field2 = mc.textField(parent = rowLayoutC1A)
-	mc.button(parent = rowLayoutC1B, label = 'Rename', command = 'changeName()')
-	mc.button(parent = rowLayoutC1B, label = 'Shader', command = 'shaderName()')
-	mc.button(parent = rowLayoutC1B, label = 'Prefix', command = 'prefix()')
-	mc.button(parent = rowLayoutC1B, label = 'Sufix', command = 'sufix()')
-	mc.button(parent = rowLayoutC1B, label = 'Replace', command = 'search()')
-############################################################################################
-	mc.button(parent = rowLayoutC2, label = '+_geo',  bgc= [0.95, 0.95, 0.95], command = 'addgeo()')
-	mc.button(parent = rowLayoutC2, label = '+_grp', bgc= [0.75, 0.75, 0.75], command = 'addgrp()')
-	mc.button(parent = rowLayoutC2, label = '+_low', bgc= [0.95, 0.95, 0.95], command = 'addlow()')
-	mc.button(parent = rowLayoutC2, label = '+_high', bgc= [0.75, 0.75, 0.75], command = 'addhigh()')
-	mc.button(parent = rowLayoutC2, label = '+_lgt', bgc= [0.95, 0.95, 0.95], command = 'addlgt()')
-	mc.button(parent = rowLayoutC2, label = '+_off', bgc= [0.75, 0.75, 0.75], command = 'addoff()')
-############################################################################################
-	mc.button(parent = rowLayoutC5, label = '+_S', bgc= [0.95, 0.95, 0.95], command = 'addS()')
-	mc.button(parent = rowLayoutC5, label = '+_SG', bgc= [0.75, 0.75, 0.75], command = 'addSG()')
-	mc.button(parent = rowLayoutC5, label = '+_L', bgc= [0.95, 0.95, 0.95], command = 'addL()')
-	mc.button(parent = rowLayoutC5, label = '+_R', bgc= [0.75, 0.75, 0.75], command = 'addR()')
-	mc.button(parent = rowLayoutC5, label = '+_top', bgc= [0.95, 0.95, 0.95], command = 'addtop()')
-	mc.button(parent = rowLayoutC5, label = '+_mid', bgc= [0.75, 0.75, 0.75], command = 'addmid()')
-	mc.button(parent = rowLayoutC5, label = '+_bot', bgc= [0.95, 0.95, 0.95], command = 'addbot()')
-############################################################################################
-	mc.button(parent = rowLayoutC6, label = '+_A', bgc= [0.75, 0.75, 0.75], command = 'addA()')
-	mc.button(parent = rowLayoutC6, label = '+_B', bgc= [0.95, 0.95, 0.95], command = 'addB()')
-	mc.button(parent = rowLayoutC6, label = '+_C', bgc= [0.75, 0.75, 0.75], command = 'addC()')
-	mc.button(parent = rowLayoutC6, label = '+_D', bgc= [0.95, 0.95, 0.95], command = 'addD()')
-	mc.button(parent = rowLayoutC6, label = '+_E', bgc= [0.75, 0.75, 0.75], command = 'addE()')
-	mc.button(parent = rowLayoutC6, label = '+_F', bgc= [0.95, 0.95, 0.95], command = 'addF()')
-	mc.button(parent = rowLayoutC6, label = '+_G', bgc= [0.75, 0.75, 0.75], command = 'addG()')
-	mc.button(parent = rowLayoutC6, label = '+_H', bgc= [0.95, 0.95, 0.95], command = 'addH()')
-############################################################################################
-	mc.button(parent = rowLayoutD1, label = 'RS', bgc= [0.3, 0.25, 0.55], command = 'redshift()')
-	mc.button(parent = rowLayoutD1, label = 'Final', bgc= [0.305, 0.222, 0.45], command = 'fnrender()')
-	mc.button(parent = rowLayoutD1, label = 'Pre', bgc= [0.305, 0.222, 0.40], command = 'prerender()')
-	mc.button(parent = rowLayoutD1, label = 'oneF.', bgc= [0.305, 0.222, 0.35], command = 'oneframerender()')
-	mc.button(parent = rowLayoutD1, label = 'Atmos.', bgc= [0.305, 0.222, 0.35], command = 'atmos()')
-	mc.button(parent = rowLayoutD1, label = 'UnAtmos', bgc= [0.305, 0.222, 0.35], command = 'unatmos()')
-############################################################################################
-	mc.button(parent = rowLayoutD2, label = 'CleanUp', bgc= [0.305, 0.222, 0.35], command = 'optscene()')
-	mc.button(parent = rowLayoutD2, label = 'TurtleKill', bgc= [0.305, 0.222, 0.35], command = 'turtlekill()')
-	mc.button(parent = rowLayoutD2, label = 'Bokeh', bgc= [0.300, 0.262, 0.40], command = 'bokeh()')
-	mc.button(parent = rowLayoutD2, label = 'Locator', bgc= [0.22, 0.22, 0.22], command = 'targetselect()')
-############################################################################################
-	mc.button(parent = rowLayoutD3, label = 'Domelgt', bgc= [0.35, 0.35, 0.25], command = 'domelgt()')
-	mc.button(parent = rowLayoutD3, label = 'Arealgt', bgc= [0.35, 0.35, 0.3], command = 'arealgt()')
-	mc.button(parent = rowLayoutD3, label = 'Pointlgt', bgc= [0.35, 0.35, 0.25], command = 'pointlgt()')
-	mc.button(parent = rowLayoutD3, label = 'Spotlgt', bgc= [0.35, 0.35, 0.3], command = 'spotlgt()')
-	mc.button(parent = rowLayoutD3, label = 'Directlgt', bgc= [0.35, 0.35, 0.25], command = 'directlgt()')
-############################################################################################
-	mc.button(parent = rowLayoutD4, label = '1080\n1920', command = 'x1080x1920()')
-	mc.button(parent = rowLayoutD4, label = '720\n1280', bgc= [0.40, 0.40, 0.40], command = 'x720x1280()')
-	mc.button(parent = rowLayoutD4, label = '540\n948', command = 'x540x948()')
-	mc.button(parent = rowLayoutD4, label = '1080\n1080', bgc= [0.40, 0.40, 0.40], command = 'x1080x1080()')
-	mc.button(parent = rowLayoutD4, label = '1080\n1350', command = 'x1080x1350()')
-	mc.button(parent = rowLayoutD4, label = '2148\n3840', bgc= [0.40, 0.40, 0.40], command = 'x2148x3840()')
-############################################################################################
-	mc.button(parent = rowLayoutD5, label = 'RenderCam', bgc= [0.49, 0.49, 0.49], command = 'rendercam()')
-	mc.button(parent = rowLayoutD5, label = 'Checker Field', bgc= [0.49, 0.49, 0.49], command = 'checkerfield()')
-	mc.button(parent = rowLayoutD5, label = 'nodetype', bgc= [0.49, 0.49, 0.49], command = 'nodetype()')
-	mc.button(parent = rowLayoutD5, label = 'Snap&Bake', bgc= [0.18, 0.18, 0.18], command = 'snp()')
-############################################################################################
-	mc.button(parent = rowLayoutD6, label = 'Joi', bgc= [0.49, 0.49, 0.49], command = 'showjoint()')
-	mc.button(parent = rowLayoutD6, label = 'Pol', bgc= [0.49, 0.49, 0.49], command = 'showpoly()')
-	mc.button(parent = rowLayoutD6, label = 'Cur', bgc= [0.49, 0.49, 0.49], command = 'showcurve()')
-	mc.button(parent = rowLayoutD6, label = 'Lgt', bgc= [0.49, 0.49, 0.49], command = 'showlight()')
-	mc.button(parent = rowLayoutD6, label = 'Cam', bgc= [0.49, 0.49, 0.49], command = 'showcam()')
-	mc.button(parent = rowLayoutD6, label = 'All', bgc= [0.49, 0.49, 0.49], command = 'showallobjects()')
-	mc.button(parent = rowLayoutD6, label = 'Cam', bgc= [0.3, 0.6, 0.5], command = 'camset()')
-	mc.button(parent = rowLayoutD6, label = 'Focus', bgc= [0.32, 0.32, 0.32], command = 'focussett()')
-############################################################################################
-	mc.button(parent = rowLayoutD7, label = 'LightBlocker', bgc= [0.24, 0.27, 0.69], command = 'lightblocker()')
-	mc.button(parent = rowLayoutD7, label = 'MatAll', bgc= [0.24, 0.27, 0.69], command = 'matteAll()')
-	mc.button(parent = rowLayoutD7, label = 'Mat1', bgc= [0.24, 0.27, 0.69], command = 'matteOne()')
-	mc.button(parent = rowLayoutD7, label = 'MatIso', bgc= [0.24, 0.27, 0.69], command = 'isolateObject()')
-	mc.button(parent = rowLayoutD7, label = 'SaveI', bgc= [0.24, 0.27, 0.69], command = 'incsave()')
-############################################################################################
-	mc.button(parent = rowLayoutE1, label = 'Random', bgc= [0.65, 0.65, 0.75], command = '()')
-	mc.button(parent = rowLayoutE1, label = 'Translate', bgc= [0.65, 0.65, 0.85], command = 'translate()')
-	mc.button(parent = rowLayoutE1, label = 'Scale', bgc= [0.65, 0.65, 0.75], command = 'scale()')
-	mc.button(parent = rowLayoutE1, label = 'Rotation', bgc= [0.65, 0.65, 0.85], command = 'rotate()')
-	mc.button(parent = rowLayoutE1, label = 'BakeSim', bgc= [0.65, 0.65, 0.75], command = 'bakesimulation()')
-############################################################################################
-	mc.button(parent = rowLayoutF1, label = 'Render\nView', bgc= [0.3, 0.25, 0.55], command = 'renderview()')
-	mc.button(parent = rowLayoutF1, label = 'Hyper\nshade', bgc= [0.3, 0.25, 0.55], command = 'hyper()')
-	mc.button(parent = rowLayoutF1, label = 'UV\nEditor', bgc= [0.3, 0.25, 0.55], command = 'uveditor()')
-	mc.button(parent = rowLayoutF1, label = 'Script\nEditor', bgc= [0.3, 0.25, 0.55], command = 'scripteditor()')
-	mc.button(parent = rowLayoutF1, label = 'Rend.\nSett.', bgc= [0.55, 0.28, 0.62], command = 'rendersettings()')
-############################################################################################
-	mc.button(parent = rowLayoutF2, label = 'Graph\nEditor', bgc= [0.27, 0.25, 0.65], command = 'grapheditor()')
-	mc.button(parent = rowLayoutF2, label = 'Node\nEditor', bgc= [0.27, 0.25, 0.65], command = 'nodeeditor()')
-	mc.button(parent = rowLayoutF2, label = 'Attri..\nSpread..', bgc= [0.27, 0.25, 0.65], command = 'attspread()')
-	mc.button(parent = rowLayoutF2, label = 'Light\nLink', bgc= [0.27, 0.25, 0.65], command = 'lightlink()')
-	mc.button(parent = rowLayoutF2, label = 'Refer..\nEditor', bgc= [0.27, 0.25, 0.65], command = 'refeditor()')
-	mc.button(parent = rowLayoutF2, label = 'RS Feed\nBack', bgc= [0.27, 0.25, 0.65], command = 'rsfeedback()')
-############################################################################################
-###############################################################################################################
-###############################################################################################################
-	mc.showWindow()
+	global animMin, animMax, animX, animY, animZ
+	W = 230
+	col = {
+		'gray':   [0.29, 0.29, 0.28],
+		'coral':  [0.40, 0.24, 0.21],
+		'purple': [0.31, 0.26, 0.42],
+		'amber':  [0.42, 0.34, 0.16],
+		'blue':   [0.18, 0.27, 0.42],
+		'teal':   [0.13, 0.34, 0.29],
+		'indigo': [0.25, 0.25, 0.46],
+	}
+	def addRow(parent, items):
+		n = len(items)
+		h = 34 if any('\n' in l for l, c, k in items) else 26
+		fl = mc.formLayout(parent=parent, numberOfDivisions=100, height=h + 2)
+		bs = []
+		for label, cmd, c in items:
+			bs.append(mc.button(parent=fl, label=label, height=h, bgc=col[c], command='_guard("%s")' % cmd))
+		for i, b in enumerate(bs):
+			lp = int(round(i * 100.0 / n))
+			rp = int(round((i + 1) * 100.0 / n))
+			mc.formLayout(fl, e=True, attachPosition=[(b, 'left', 1, lp), (b, 'right', 1, rp)], attachForm=[(b, 'top', 1), (b, 'bottom', 1)])
+		return fl
+	def addField(parent):
+		fl = mc.formLayout(parent=parent, height=24)
+		t = mc.textField(parent=fl)
+		mc.formLayout(fl, e=True, attachForm=[(t, 'left', 2), (t, 'right', 2), (t, 'top', 1), (t, 'bottom', 1)])
+		return t
+	def addLabel(parent, text):
+		mc.text(parent=parent, label=text, height=14, align='left', font='smallObliqueLabelFont')
+	def addMinMax(parent):
+		global animMin, animMax
+		fl = mc.formLayout(parent=parent, numberOfDivisions=100, height=24)
+		l1 = mc.text(parent=fl, label='Min', align='right')
+		animMin = mc.textField(parent=fl, text='-1')
+		l2 = mc.text(parent=fl, label='Max', align='right')
+		animMax = mc.textField(parent=fl, text='1')
+		mc.formLayout(fl, e=True, attachPosition=[(l1, 'left', 2, 0), (l1, 'right', 2, 16), (animMin, 'left', 0, 16), (animMin, 'right', 3, 50), (l2, 'left', 2, 50), (l2, 'right', 2, 66), (animMax, 'left', 0, 66), (animMax, 'right', 2, 100)], attachForm=[(l1, 'top', 4), (l1, 'bottom', 2), (animMin, 'top', 1), (animMin, 'bottom', 1), (l2, 'top', 4), (l2, 'bottom', 2), (animMax, 'top', 1), (animMax, 'bottom', 1)])
+	def addAxis(parent):
+		global animX, animY, animZ
+		fl = mc.formLayout(parent=parent, numberOfDivisions=100, height=22)
+		animX = mc.checkBox(parent=fl, label='X', value=True)
+		animY = mc.checkBox(parent=fl, label='Y', value=True)
+		animZ = mc.checkBox(parent=fl, label='Z', value=True)
+		mc.formLayout(fl, e=True, attachPosition=[(animX, 'left', 4, 4), (animX, 'right', 0, 33), (animY, 'left', 4, 36), (animY, 'right', 0, 66), (animZ, 'left', 4, 69), (animZ, 'right', 0, 100)], attachForm=[(animX, 'top', 2), (animX, 'bottom', 2), (animY, 'top', 2), (animY, 'bottom', 2), (animZ, 'top', 2), (animZ, 'bottom', 2)])
+	def section(label, collapse=False):
+		return mc.frameLayout(parent=main, label='  ' + label, collapsable=True, collapse=collapse, marginHeight=2, backgroundColor=[0.2, 0.2, 0.2])
+	main = mc.columnLayout(adjustableColumn=True, rowSpacing=1, width=W)
+	f = section('Modeling', collapse=False)
+	addRow(f, [('Freeze\nTransform', 'fTrans()', 'gray'), ('Delete\nHistory', 'dHis()', 'coral'), ('Delete\nNon-Def', 'dnondefHis()', 'coral'), ('Center\nPivot', 'cPiv()', 'gray')])
+	addRow(f, [('Send to\nOrigin', 'zero()', 'gray'), ('Enable\nReference', 'refEnable()', 'gray'), ('Group', 'group()', 'gray'), ('Auto UV', 'autoUV()', 'amber')])
+	addRow(f, [('UV\nCopy', 'UVcopy()', 'amber'), ('BBox\nOn', 'box()', 'teal'), ('BBox\nOff', 'unbox()', 'teal'), ('Lock\nAttrs', 'lock()', 'blue'), ('Unlock\nAttrs', 'unlock()', 'blue')])
+	f = section('Shading', collapse=False)
+	addRow(f, [('Tess 2', 'tess2()', 'purple'), ('Tess 3', 'tess3()', 'purple'), ('Tess Off', 'untess()', 'purple')])
+	addRow(f, [('Displace\nOn', 'disp()', 'teal'), ('Displace\nOff', 'undisp()', 'teal'), ('Backface', 'backface()', 'teal')])
+	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple')])
+	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
+	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('Phong', 'matphong()', 'gray')])
+	f = section('Name', collapse=False)
+	field1 = addField(f)
+	field2 = addField(f)
+	addRow(f, [('Rename', 'changeName()', 'gray'), ('Shader', 'shaderName()', 'gray'), ('Prefix', 'prefix()', 'gray'), ('Suffix', 'sufix()', 'gray'), ('Replace', 'search()', 'gray')])
+	f = section('Pre-name', collapse=True)
+	addRow(f, [('+geo', 'addgeo()', 'gray'), ('+grp', 'addgrp()', 'gray'), ('+low', 'addlow()', 'gray'), ('+high', 'addhigh()', 'gray'), ('+lgt', 'addlgt()', 'gray'), ('+off', 'addoff()', 'gray')])
+	addRow(f, [('+S', 'addS()', 'gray'), ('+SG', 'addSG()', 'gray'), ('+L', 'addL()', 'gray'), ('+R', 'addR()', 'gray'), ('+top', 'addtop()', 'gray'), ('+mid', 'addmid()', 'gray'), ('+bot', 'addbot()', 'gray')])
+	addRow(f, [('+A', 'addA()', 'gray'), ('+B', 'addB()', 'gray'), ('+C', 'addC()', 'gray'), ('+D', 'addD()', 'gray'), ('+E', 'addE()', 'gray'), ('+F', 'addF()', 'gray'), ('+G', 'addG()', 'gray'), ('+H', 'addH()', 'gray')])
+	f = section('Render', collapse=False)
+	addLabel(f, '  Output')
+	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('1\nFrame', 'oneframerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
+	addLabel(f, '  Lights')
+	addRow(f, [('Dome', 'domelgt()', 'amber'), ('Area', 'arealgt()', 'amber'), ('Point', 'pointlgt()', 'amber')])
+	addRow(f, [('Spot', 'spotlgt()', 'amber'), ('Direct.', 'directlgt()', 'amber'), ('Mesh\nLight', 'meshlgt()', 'amber')])
+	addLabel(f, '  Resolution')
+	addRow(f, [('1920\n1080', 'x1080x1920()', 'gray'), ('1280\n720', 'x720x1280()', 'gray'), ('960\n540', 'x540x960()', 'gray'), ('1080\n1080', 'x1080x1080()', 'gray'), ('1080\n1920', 'x1920x1080()', 'gray'), ('3840\n2160', 'x2148x3840()', 'gray')])
+	addLabel(f, '  Scene tools')
+	addRow(f, [('Preserve\nEdge', 'preserveedge()', 'gray'), ('Bokeh', 'bokeh()', 'blue'), ('Locator', 'targetselect()', 'gray'), ('Render\nCam', 'rendercam()', 'blue')])
+	addRow(f, [('Checker', 'checkerfield()', 'gray'), ('Node\nType', 'nodetype()', 'gray'), ('Snap &\nBake', 'snp()', 'gray')])
+	addLabel(f, '  Matte / output')
+	addRow(f, [('Light\nBlocker', 'lightblocker()', 'blue'), ('Matte\nAll', 'matteAll()', 'blue'), ('Matte 1', 'matteOne()', 'blue'), ('Matte\nIsolate', 'isolateObject()', 'blue'), ('Save\nIncr.', 'incsave()', 'gray')])
+	f = section('Display', collapse=False)
+	addRow(f, [('Joints', 'showjoint()', 'teal'), ('Polys', 'showpoly()', 'teal'), ('Curves', 'showcurve()', 'teal')])
+	addRow(f, [('Lights', 'showlight()', 'teal'), ('Cameras', 'showcam()', 'teal'), ('All', 'showallobjects()', 'teal')])
+	addRow(f, [('Cam\nSetup', 'camset()', 'teal'), ('Focus', 'focussett()', 'teal')])
+	f = section('Animation', collapse=True)
+	addLabel(f, '  Random range')
+	addMinMax(f)
+	addLabel(f, '  Axes')
+	addAxis(f)
+	addRow(f, [('Translate', 'translate()', 'gray'), ('Scale', 'scale()', 'gray'), ('Rotate', 'rotate()', 'gray'), ('Bake Sim', 'bakesimulation()', 'gray')])
+	f = section('Windows', collapse=False)
+	addRow(f, [('Render\nView', 'renderview()', 'indigo'), ('Hyper-\nshade', 'hyper()', 'indigo'), ('UV\nEditor', 'uveditor()', 'indigo'), ('Script\nEditor', 'scripteditor()', 'indigo')])
+	addRow(f, [('Render\nSettings', 'rendersettings()', 'indigo'), ('Graph\nEditor', 'grapheditor()', 'indigo'), ('Node\nEditor', 'nodeeditor()', 'indigo'), ('Attr\nSpread', 'attspread()', 'indigo')])
+	addRow(f, [('Light\nLink', 'lightlink()', 'indigo'), ('RS\nFeedback', 'rsfeedback()', 'indigo')])
 
 ##############################################################################################################################
 ##############################################################################################################################
@@ -370,6 +143,20 @@ def bPiv():
 		mc.xform (obj, ws=True, p=True, cp=True)
 		centerPos = mc.xform (obj, q=True, ws=True, sp=True)
 		mc.xform (obj, ws=True, piv=(centerPos[0], bbox[1], centerPos[2]))
+def UVcopy():
+	#grab all the selected objects
+	selectedObjects = mc.ls(sl=True)
+	#save first one into variable
+	#pop first one out of the selected objects list
+	driver = selectedObjects.pop(0)
+	#for each object in the selected objects list
+	for object in selectedObjects:
+		mc.select([driver,object])
+		mc.transferAttributes(sampleSpace=4,transferUVs=2,transferColors=2)
+def zeropiv():
+	sel_n = mc.ls(selection=True, type='transform')
+	for obj in sel_n:
+		mc.xform (obj, ws=True, piv=(0, 0, 0))
 def box():
 	sel = mc.ls(selection=True)
 	for i in sel:
@@ -404,9 +191,11 @@ def unlock():
 		mc.setAttr (i+'.sx', lock=False)
 		mc.setAttr (i+'.sy', lock=False)
 		mc.setAttr (i+'.sz', lock=False)
-def cpyAtt():
+def refEnable():
 	sel_b = mc.ls(selection=True)
-	mc.copyAttr(sel_b[0],sel_b[1],values=True)
+	for i in sel_b:
+		mc.setAttr (i+'Shape.overrideEnabled', 1)
+		mc.setAttr (i+'Shape.overrideDisplayType', 2)
 def tess2():
 	sel = mc.ls(selection=True)
 	for i in sel:
@@ -443,147 +232,7 @@ def backface():
 		else:
 			mc.displayCull( bfc=True )
 		mc.select(sel)
-def matglass(): #Create Glass Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'glass_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 0)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matwater(): #Create Water Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'water_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 1)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matplastic(): #Create Plastic Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'plastic_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 2)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def mataluminium(): #Create Aluminium Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'aluminium_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 3)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matcopper(): #Create Copper Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'copper_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 4)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matgold(): #Create Gold Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'gold_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 5)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matiron(): #Create Iron Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'iron_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 6)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matlead(): #Create Lead Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'lead_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 7)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matplatinum(): #Create Platinum Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'platinum_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 8)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matsilver(): #Create Silver Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'silver_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 9)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matmilky(): #Create Milky Coffe Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'milkyCoffee_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 10)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matjade(): #Create Jade Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'jade_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 11)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matpaper(): #Create Paper Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'paper_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 12)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def mattinted(): #Create Tinder Glass Material and add it to selected object
-	sel_a = mc.ls(selection=True)
-	presetname = 'tintedglass_'
-	input=presetname + sel_a[0]
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=input + '_S')
-	mc.setAttr(input + '_S.refl_brdf', 1) #not working somehow
-	mc.setAttr (input + '_S.preset', 13)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=input + '_SG')
-	mc.connectAttr(input +'_S.outColor', input + '_SG.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=input + '_SG')
-def matlambert():
+def matphong():
 	#Create Material and assign on selected objects with their names on material
 	import random as random
 	from random import uniform as rand
@@ -595,7 +244,7 @@ def matlambert():
 	sel_geo = mc.ls(selection=True)
 	nam1 = sel_geo[0].replace('_geo', '')
 	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('lambert', asShader=True, n=nam2 + '_#')
+	mc.shadingNode ('phong', asShader=True, n=nam2 + '_#')
 	sel_s = mc.ls(selection=True)
 	mc.rename (sel_s[0], sel_s[0] + '_S')
 	sel_inp = mc.ls(selection=True)
@@ -603,13 +252,125 @@ def matlambert():
 	mc.setAttr(inputs + '.color', rand1+randlist, rand2+randlist, ranD4+randlist)
 	mc.setAttr(inputs + '.transparency', 0,0,0)
 	mc.setAttr(inputs + '.diffuse', 1)
+	mc.setAttr(inputs + '.specularColor', 0, 0, 0)
+	mc.setAttr(inputs + '.reflectivity', 0)
 	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
 	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
 	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
 	mc.select (sel_geo[0])
+def _pbrMat(metal, detail, colorlayer=False):
+	#metal True=metallic / False=dielectric(IOR 1.5). detail='bump' or 'displace' (noise-driven). One shared material for the whole selection.
+	#colorlayer=True also builds a Maxon-noise + AO + Curvature network through a RedshiftColorLayer into base_color (layers 1 & 2 enabled).
+	import random
+	import colorsys
+	sel_geo = mc.ls(selection=True)
+	if not sel_geo:
+		mc.warning('weeTools: select object(s) first.')
+		return
+	name = sel_geo[0].split('|')[-1].replace('_geo', '')
+	r, g, b = colorsys.hsv_to_rgb(random.random(), random.uniform(0.35, 0.85), random.uniform(0.25, 0.85))
+	mat = mc.shadingNode('RedshiftStandardMaterial', asShader=True, name=name + '_S')
+	mc.setAttr(mat + '.base_color', r, g, b, type='double3')
+	mc.setAttr(mat + '.refl_weight', 1)
+	mc.setAttr(mat + '.refl_roughness', 0.4)
+	if metal:
+		mc.setAttr(mat + '.metalness', 1)
+	else:
+		try:
+			mc.setAttr(mat + '.refl_ior', 1.5)
+		except:
+			pass
+	sg = mc.sets(renderable=True, noSurfaceShader=True, empty=True, name=name + '_SG')
+	mc.connectAttr(mat + '.outColor', sg + '.surfaceShader', force=True)
+	mc.sets(sel_geo, edit=True, forceElement=sg)
+	noise = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name=name + '_rsMaxon')
+	for _a, _v in [('.scale', 5), ('.globalScale', 100)]:
+		try:
+			mc.setAttr(noise + _a, _v)
+		except:
+			pass
+	if detail == 'bump':
+		bump = mc.shadingNode('RedshiftBumpMap', asShader=True, name=name + '_rsBump')
+		mc.connectAttr(noise + '.outColor', bump + '.input', force=True)
+		try:
+			mc.setAttr(bump + '.factorInObjScale', 0)
+		except:
+			pass
+		try:
+			mc.setAttr(bump + '.scale', 0.2)
+		except:
+			pass
+		mc.connectAttr(bump + '.out', mat + '.bump_input', force=True)
+	else:
+		disp = mc.shadingNode('RedshiftDisplacement', asShader=True, name=name + '_rsDispl')
+		mc.connectAttr(noise + '.outColor', disp + '.texMap', force=True)
+		try:
+			mc.setAttr(disp + '.scale', 0.5)
+		except:
+			pass
+		mc.connectAttr(disp + '.out', sg + '.displacementShader', force=True)
+		shapes = mc.listRelatives(sel_geo, shapes=True, fullPath=True) or []
+		for shp in shapes:
+			for a, v in [('.rsEnableSubdivision', 1), ('.rsMaxTessellationSubdivs', 2), ('.rsEnableDisplacement', 1)]:
+				try:
+					mc.setAttr(shp + a, v)
+				except:
+					pass
+	if colorlayer:
+		#Flat random base colour on the Color Layer; AO -> layer-1 mask, Curvature -> layer-2 mask (its output max driven by Maxon noise). Color Layer -> material base_color.
+		clr = mc.shadingNode('RedshiftColorLayer', asTexture=True, name=name + '_rsClrLyr')
+		try:
+			mc.setAttr(clr + '.base_color', r, g, b, type='double3')
+		except:
+			pass
+		mc.connectAttr(clr + '.outColor', mat + '.base_color', force=True)
+		#Layer 1 = Ambient Occlusion (inverted: white<->black) feeding the layer mask
+		ao = mc.shadingNode('RedshiftAmbientOcclusion', asTexture=True, name=name + '_rsAO')
+		try:
+			mc.setAttr(ao + '.bright', 0, 0, 0, type='double3')
+		except:
+			pass
+		try:
+			mc.setAttr(ao + '.dark', 1, 1, 1, type='double3')
+		except:
+			pass
+		try:
+			mc.setAttr(ao + '.maxDistance', 50)
+		except:
+			pass
+		try:
+			mc.setAttr(ao + '.spread', 0.4)
+		except:
+			pass
+		try:
+			mc.setAttr(clr + '.layer1_enable', 1)
+		except:
+			pass
+		try:
+			mc.connectAttr(ao + '.outColorR', clr + '.layer1_mask', force=True)
+		except:
+			pass
+		#Layer 2 = Curvature (output max modulated by Maxon noise) feeding the layer mask
+		cnoise = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name=name + '_rsMaxonClr')
+		curv = mc.shadingNode('RedshiftCurvature', asTexture=True, name=name + '_rsCurv')
+		for _cattr in ['.outputMax', '.output_max']:
+			try:
+				mc.connectAttr(cnoise + '.outColorR', curv + _cattr, force=True)
+				break
+			except:
+				pass
+		try:
+			mc.setAttr(clr + '.layer2_enable', 1)
+		except:
+			pass
+		try:
+			mc.connectAttr(curv + '.out', clr + '.layer2_mask', force=True)
+		except:
+			pass
+	mc.select(sel_geo)
+def pbrBD(): _pbrMat(False, 'bump', colorlayer=True)
 
 def mat1():
-	#Create Material and assign on selected objects with their names on material
 	import random as random
 	from random import uniform as rand
 	rand1 = rand(0.0,1.0)
@@ -620,179 +381,111 @@ def mat1():
 	sel_geo = mc.ls(selection=True)
 	nam1 = sel_geo[0].replace('_geo', '')
 	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=nam2 + '_#')
+	mc.shadingNode ('RedshiftStandardMaterial', asShader=True, n=nam2 + '_#')
 	sel_s = mc.ls(selection=True)
 	mc.rename (sel_s[0], sel_s[0] + '_S')
 	sel_inp = mc.ls(selection=True)
 	inputs = sel_inp[0]
-	mc.setAttr(inputs + '.diffuse_color', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr(inputs + '.refl_brdf', 1)
-	mc.setAttr(inputs + '.refl_weight', 0.1)
-	mc.setAttr(inputs + '.refl_roughness', 0.20)
+	mc.setAttr(inputs + '.base_color', rand1+randlist, rand2+randlist, ranD4+randlist)
+	mc.setAttr(inputs + '.refl_weight', 0)
+	mc.setAttr(inputs + '.refl_roughness', 0)
 	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
 	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
 	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
+
+	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=inputs + '_fresnel')
+	sel_fres = mc.ls(selection=True)
+	mc.setAttr (sel_fres[0] + '.correct_intensity', 0)
+
+	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
+	sel_math1 = mc.ls(selection=True)
+	mc.setAttr(sel_math1[0] + '.floatA', 1)
+	mc.setAttr(sel_math1[0] + '.operation', 1)
+
+	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
+	sel_math2 = mc.ls(selection=True)
+	mc.setAttr(sel_math2[0] + '.floatA', 1)
+	mc.setAttr(sel_math2[0] + '.operation', 1)
+	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorR')
+	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorG')
+	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorB')
+	mc.connectAttr(inputs + '.refl_roughness', sel_math2[0] + '.floatB')
+
+	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
+	sel_math3 = mc.ls(selection=True)
+	mc.connectAttr(inputs + '.refl_weight', sel_math3[0] + '.floatA')
+	mc.connectAttr(sel_fres[0] + '.outColorR', sel_math3[0] + '.floatB')
+	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_weight')
+
+	mc.connectAttr(sel_math3[0] + '.outFloat', sel_math1[0] + '.floatB')
+	mc.connectAttr(sel_math1[0] + '.outFloat', inputs + '.diffuse_weight')
+
+	mc.connectAttr(inputs + '.refl_roughness', inputs + '.diffuse_roughness')
+
+	rsbump = mc.shadingNode ('RedshiftBumpMap', asShader=True, n=sel_geo[0] + '_rsBump')
+	diffuse = mc.shadingNode ('file', asTexture=True, name=sel_geo[0]+'_diffuse')
+	roughness = mc.shadingNode ('file', asTexture=True, name=sel_geo[0]+'_roughness')
+	bump = mc.shadingNode ('file', asTexture=True, name=sel_geo[0]+'_bump')
+	#transmittance = mc.shadingNode ('file', asTexture=True, name=sel_geo[0]+'_transmittance')
+	#displacement = mc.shadingNode ('file', asTexture=True, name=sel_geo[0]+'_displacement')
+	texture = mc.shadingNode ('place2dTexture', asUtility=True, name=sel_geo[0]+'_place2dTexture')
+
+	mc.select(clear=True)
+	mc.select(texture, add=True)
+	mc.select(diffuse, add=True)
+	mc.select(roughness, add=True)
+	mc.select(bump, add=True)
+	#mc.select(displacement, add=True)
+	#mc.select(transmittance, add=True)
+	#-----------------------------------------------------------
+	selnode = mc.ls(selection=True)
+	#if selnode[0] type='place2dTexture'
+	for x in range(len(selnode)):
+		try:
+			mc.connectAttr(selnode[0] +'.outUV', selnode[x+1] + '.uvCoord')
+			mc.connectAttr(selnode[0] +'.outUvFilterSize', selnode[x+1] + '.uvFilterSize')
+			mc.connectAttr(selnode[0] +'.coverage', selnode[x+1] + '.coverage')
+			mc.connectAttr(selnode[0] +'.mirrorU', selnode[x+1] + '.mirrorU')
+			mc.connectAttr(selnode[0] +'.mirrorV', selnode[x+1] + '.mirrorV')
+			mc.connectAttr(selnode[0] +'.noiseUV', selnode[x+1] + '.noiseUV')
+			mc.connectAttr(selnode[0] +'.offset', selnode[x+1] + '.offset')
+			mc.connectAttr(selnode[0] +'.repeatUV', selnode[x+1] + '.repeatUV')
+			mc.connectAttr(selnode[0] +'.rotateFrame', selnode[x+1] + '.rotateFrame')
+			mc.connectAttr(selnode[0] +'.rotateUV', selnode[x+1] + '.rotateUV')
+			mc.connectAttr(selnode[0] +'.stagger', selnode[x+1] + '.stagger')
+			mc.connectAttr(selnode[0] +'.translateFrame', selnode[x+1] + '.translateFrame')
+			mc.connectAttr(selnode[0] +'.vertexCameraOne', selnode[x+1] + '.vertexCameraOne')
+			mc.connectAttr(selnode[0] +'.vertexUvOne', selnode[x+1] + '.vertexUvOne')
+			mc.connectAttr(selnode[0] +'.vertexUvThree', selnode[x+1] + '.vertexUvThree')
+			mc.connectAttr(selnode[0] +'.vertexUvTwo', selnode[x+1] + '.vertexUvTwo')
+			mc.connectAttr(selnode[0] +'.wrapU', selnode[x+1] + '.wrapU')
+			mc.connectAttr(selnode[0] +'.wrapV', selnode[x+1] + '.wrapV')
+		except:
+			pass
+	#------------------------------------------------------------
+	mc.connectAttr (bump+'.outColor', rsbump+'.input.')
+	mc.connectAttr (rsbump+'.out', inputs+'.bump_input')
+	mc.setAttr(rsbump+'.factorInObjScale', 0)
+	mc.setAttr(rsbump+'.scale', 0.1)
+	mc.connectAttr (roughness+'.outColor.outColorG', inputs+'.refl_roughness')
+	mc.connectAttr (diffuse+'.outColor', inputs+'.base_color')
+
+	#mc.connectAttr (transmittance +'.outColor', inputs+'.refr_transmittance')
+	#mc.setAttr(inputs + '.ss_amount', 1)
+
+	mc.setAttr (nam2+'.rsEnableDisplacement', 1)
+	mc.setAttr (nam2+'.rsEnableSubdivision', 1)
+	mc.setAttr (nam2+'.rsMaxTessellationSubdivs', 2)
+	mc.setAttr (nam2+'.rsMinTessellationLength', 2)
+
+	#mc.shadingNode ('RedshiftDisplacement', asShader=True, n=inputs + '_displ')
+	#mc.connectAttr (inputs+'_displ.out', inputs+'G.displacementShader')
+	#mc.connectAttr (displacement +'.outColor', inputs+'_displ.texMap')
+
 	mc.select (sel_geo[0])
-def mat2():
-	#Create Material and assign on selected objects with their names on material
-	import random as random
-	from random import uniform as rand
-	rand1 = rand(0.0,1.0)
-	rand2 = rand(0.01,0.99)
-	ranD4 = rand(0.02,0.98)
-	draw_list = [0.35, 0.30, 0.25, 0.20, 0.15, -0.35, -0.30, -0.25, -0.20, -0.15,]
-	randlist = random.choice(draw_list)
-	sel_geo = mc.ls(selection=True)
-	nam1 = sel_geo[0].replace('_geo', '')
-	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=nam2 + '_#')
-	sel_s = mc.ls(selection=True)
-	mc.rename (sel_s[0], sel_s[0] + '_S')
-	sel_inp = mc.ls(selection=True)
-	inputs = sel_inp[0]
-	mc.setAttr(inputs + '.refl_brdf', 1)
-	mc.setAttr(inputs + '.refl_weight', 0.15)
-	mc.setAttr(inputs + '.refl_roughness', 0.15)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
-	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
-	#Create Fresnel Node and connect it to the material
-	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=sel_s[0])
-	sel_f = mc.ls(selection=True)
-	mc.rename (sel_f[0], sel_f[0] + '_fresnel')
-	sel_fre = mc.ls(selection=True)
-	mc.setAttr (sel_fre[0] + '.fresnel_useior', 0)
-	mc.setAttr (sel_fre[0] + '.facing_color', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr (sel_fre[0] + '.perp_color', rand1-randlist, rand2-randlist, ranD4-randlist)
-	mc.connectAttr( sel_fre[0] + '.outColor', inputs + '.diffuse_color' )
-	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
-	mc.select (sel_geo[0])
-def mat3():
-	import random as random
-	from random import uniform as rand
-	sel_a = mc.ls(selection=True)
-	input = sel_a[0]
-	namo = input.replace('_geo', '')
-	name = namo.replace('|', '')
-	#DiffuseSettings
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=name + '_#')
-	sel_s = mc.ls(selection=True)
-	mc.rename (sel_s[0], sel_s[0] + '_S')
-	sel_inp = mc.ls(selection=True)
-	inputs = sel_inp[0]
-	mc.setAttr (inputs + '.diffuse_weight', 0)
-	mc.setAttr (inputs + '.refl_brdf', 1)
-	mc.setAttr (inputs + '.refl_weight', 1)
-	#reflRoughnessMapSettings
-	mc.shadingNode( 'RedshiftNoise', asTexture=True, n=sel_s[0])
-	sel_n = mc.ls(selection=True)
-	mc.rename (sel_n[0], sel_n[0] + '_rsNoise')
-	sel_noi = mc.ls(selection=True)
-	mc.setAttr (sel_noi[0] + '.noise_type', 3)
-	mc.setAttr (sel_noi[0] + '.noise_complexity', 5)
-	mc.setAttr (sel_noi[0] + '.coord_scale_global', 20)
-	mc.setAttr (sel_noi[0] + '.coord_scale0', 40)
-	mc.setAttr (sel_noi[0] + '.coord_scale1', 1)
-	mc.setAttr (sel_noi[0] + '.coord_scale2', 1)
-	mc.connectAttr(sel_noi[0] + '.outColorR', inputs + '.refl_roughness' )
-	#IORSettings
-	mc.setAttr (inputs + '.refl_fresnel_mode', 1)
-	mc.setAttr (inputs + '.refl_reflectivity', 0.005, 0.005, 0.005)
-	#subsurfaceSettings
-	mc.setAttr (inputs + '.ss_unitsMode', 1)
-	mc.setAttr (inputs + '.ss_extinction_coeff', 0.33, 1.1, 0.93)
-	mc.setAttr (inputs + '.ss_extinction_scale', 16)
-	mc.setAttr (inputs + '.ss_scatter_coeff', 1.2, 0.51, 0.72)
-	mc.setAttr (inputs + '.ss_amount', 16)
-	mc.setAttr (inputs + '.ss_phase', 0.05)
-	mc.setAttr (inputs + '.ss_samples', 64)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
-	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
-	mc.sets(sel_a, edit=True, forceElement=inputs + 'G')
-def mat4():
-	#Create Material and assign on selected objects with their names on material
-	import random as random
-	from random import uniform as rand
-	rand1 = rand(0.0,1.0)
-	rand2 = rand(0.01,0.99)
-	ranD4 = rand(0.02,0.98)
-	draw_list = [0.35, 0.30, 0.25, 0.20, 0.15, -0.35, -0.30, -0.25, -0.20, -0.15,]
-	randlist = random.choice(draw_list)
-	sel_geo = mc.ls(selection=True)
-	nam1 = sel_geo[0].replace('_geo', '')
-	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=nam2 + '_#')
-	sel_s = mc.ls(selection=True)
-	mc.rename (sel_s[0], sel_s[0] + '_S')
-	sel_inp = mc.ls(selection=True)
-	inputs = sel_inp[0]
-	mc.setAttr(inputs + '.refl_brdf', 1)
-	mc.setAttr(inputs + '.refl_weight', 0.15)
-	mc.setAttr(inputs + '.refl_roughness', 0.15)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
-	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
-	#Create Fresnel Node and connect it to the material
-	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=sel_s[0])
-	sel_f = mc.ls(selection=True)
-	mc.rename (sel_f[0], sel_f[0] + '_fresnel')
-	sel_fre = mc.ls(selection=True)
-	mc.setAttr (sel_fre[0] + '.fresnel_useior', 0)
-	mc.setAttr (sel_fre[0] + '.facing_color', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr (sel_fre[0] + '.perp_color', rand1-randlist, rand2-randlist, ranD4-randlist)
-	mc.connectAttr( sel_fre[0] + '.outColor', inputs + '.diffuse_color' )
-	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
-	mc.select (sel_geo[0])
-
-	mc.setAttr (inputs + '.refl_fresnel_mode', 2)
-	mc.shadingNode ('RedshiftRoundCorners', asShader=True, n=inputs + '_rsRoundCrnr')
-	mc.shadingNode ('RedshiftBumpMap', asShader=True, n=inputs + '_rsBump')
-	mc.shadingNode ('RedshiftBumpBlender', asShader=True, n=inputs + '_rsBumpBlend')
-	mc.connectAttr(inputs + '_rsBump.out', inputs + '_rsBumpBlend.bumpInput0')
-	mc.setAttr (inputs + '_rsBumpBlend.bumpWeight0', 1)
-	mc.setAttr (inputs + '_rsBumpBlend.additive', 1)
-	mc.connectAttr(inputs + '_rsRoundCrnr.out', inputs + '_rsBumpBlend.baseInput')
-	mc.setAttr (inputs + '_rsBump.newrange_min', -0.4)
-	mc.setAttr (inputs + '_rsBump.newrange_max', 0.4)
-	mc.setAttr (inputs + '_rsBump.scale', 0.01)
-
-	mc.connectAttr (inputs + '_rsBumpBlend.outColor', inputs + '.bump_input')
-
-	mc.shadingNode('noise', asTexture=True)
-	noise=mc.ls(selection=True)
-	mc.shadingNode('place2dTexture', asUtility=True)
-	noiseUV=mc.ls(selection=True)
-	mc.connectAttr(noiseUV[0]+'.outUV', noise[0]+'.uvCoord')
-	mc.connectAttr(noiseUV[0]+'.outUvFilterSize', noise[0]+'.uvFilterSize')
-	mc.shadingNode ('RedshiftTriPlanar', asShader=True, n=inputs + '_rsTripl')
-	mc.connectAttr(noise[0] + '.outColor', inputs + '_rsTripl.imageX')
-	mc.connectAttr(inputs + '_rsTripl.outColor', inputs + '_rsBump.input')
-	mc.setAttr(inputs + '_rsTripl.scale0', 0.1)
-	mc.setAttr(inputs + '_rsTripl.scale1', 0.1)
-	mc.setAttr(inputs + '_rsTripl.scale2', 0.1)
-
-def mat5():
-	#Create matte Shadow catcher for toonShader purposes
-	import random as random
-	from random import uniform as rand
-	rand1 = rand(0.0,1.0)
-	rand2 = rand(0.01,0.99)
-	ranD4 = rand(0.02,0.98)
-	draw_list = [0.35, 0.30, 0.25, 0.20, 0.15, -0.35, -0.30, -0.25, -0.20, -0.15,]
-	randlist = random.choice(draw_list)
-	sel_geo = mc.ls(selection=True)
-	nam1 = sel_geo[0].replace('_geo', '')
-	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMatteShadowCatcher', asShader=True, n=nam2 + 'matte' + '_#')
-	sel_shader = mc.ls(selection=True)
-	mc.setAttr(sel_shader[0] + '.background', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr(sel_shader[0] + '.catch_shadows', 1)
-	mc.setAttr(sel_shader[0] + '.ambient', 1,1,1)
-	mc.setAttr(sel_shader[0] + '.shadows', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr(sel_shader[0] + '.ao_on', 1)
-	mc.setAttr(sel_shader[0] + '.ao_distance', 2)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=sel_shader[0] + 'G')
-	mc.connectAttr(sel_shader[0] + '.outColor', sel_shader[0] + 'G.surfaceShader')
-	for i in range(len(sel_geo)):
-		mc.sets(sel_geo[i], edit=True, forceElement=sel_shader[0] + 'G')
+def pbrBM(): _pbrMat(True, 'bump')
+def pbrDD(): _pbrMat(False, 'displace')
+def pbrDM(): _pbrMat(True, 'displace')
 
 def texcon():
 	selnode = mc.ls(selection=True)
@@ -825,129 +518,6 @@ def primvis():
 	for i in sel:
 		mc.setAttr (i+'.primaryVisibility', 1)
 
-def pbrd():
-	import random as random
-	from random import uniform as rand
-	rand1 = rand(0.0,1.0)
-	rand2 = rand(0.01,0.99)
-	ranD4 = rand(0.02,0.98)
-	draw_list = [0.35, 0.30, 0.25, 0.20, 0.15, -0.35, -0.30, -0.25, -0.20, -0.15,]
-	randlist = random.choice(draw_list)
-	sel_geo = mc.ls(selection=True)
-	nam1 = sel_geo[0].replace('_geo', '')
-	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=nam2 + '_#')
-	sel_s = mc.ls(selection=True)
-	mc.rename (sel_s[0], sel_s[0] + '_S')
-	sel_inp = mc.ls(selection=True)
-	inputs = sel_inp[0]
-	mc.setAttr(inputs + '.diffuse_color', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr(inputs + '.refl_brdf', 1)
-	mc.setAttr(inputs + '.refl_weight', 0)
-	mc.setAttr(inputs + '.refl_roughness', 0)
-	mc.setAttr(inputs + '.refl_fresnel_mode', 2)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
-	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
-	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
-
-	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=inputs + '_fresnel')
-	sel_fres = mc.ls(selection=True)
-	mc.setAttr (sel_fres[0] + '.correct_intensity', 0)
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math1 = mc.ls(selection=True)
-	mc.setAttr(sel_math1[0] + '.floatA', 1)
-	mc.setAttr(sel_math1[0] + '.operation', 1)
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math2 = mc.ls(selection=True)
-	mc.setAttr(sel_math2[0] + '.floatA', 1)
-	mc.setAttr(sel_math2[0] + '.operation', 1)
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorR')
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorG')
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorB')
-	mc.connectAttr(inputs + '.refl_roughness', sel_math2[0] + '.floatB')
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math3 = mc.ls(selection=True)
-	mc.connectAttr(inputs + '.refl_weight', sel_math3[0] + '.floatA')
-	mc.connectAttr(sel_fres[0] + '.outColorR', sel_math3[0] + '.floatB')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityR')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityG')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityB')
-
-	mc.connectAttr(sel_math3[0] + '.outFloat', sel_math1[0] + '.floatB')
-	mc.connectAttr(sel_math1[0] + '.outFloat', inputs + '.diffuse_weight')
-
-	mc.connectAttr(inputs + '.refl_roughness', inputs + '.diffuse_roughness')
-
-	mc.select (sel_geo[0])
-
-def pbrm():
-	import random as random
-	from random import uniform as rand
-	rand1 = rand(0.0,1.0)
-	rand2 = rand(0.01,0.99)
-	ranD4 = rand(0.02,0.98)
-	draw_list = [0.35, 0.30, 0.25, 0.20, 0.15, -0.35, -0.30, -0.25, -0.20, -0.15,]
-	randlist = random.choice(draw_list)
-	sel_geo = mc.ls(selection=True)
-	nam1 = sel_geo[0].replace('_geo', '')
-	nam2 = nam1.replace('|', '')
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=nam2 + '_#')
-	sel_s = mc.ls(selection=True)
-	mc.rename (sel_s[0], sel_s[0] + '_S')
-	sel_inp = mc.ls(selection=True)
-	inputs = sel_inp[0]
-	mc.setAttr(inputs + '.diffuse_color', rand1+randlist, rand2+randlist, ranD4+randlist)
-	mc.setAttr(inputs + '.refl_brdf', 1)
-	mc.setAttr(inputs + '.refl_weight', 0)
-	mc.setAttr(inputs + '.refl_roughness', 0)
-	mc.setAttr(inputs + '.refl_fresnel_mode', 2)
-	mc.setAttr(inputs + '.refl_metalness', 1)
-	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=inputs + 'G')
-	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
-	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
-
-	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=inputs + '_fresnel')
-	sel_fres = mc.ls(selection=True)
-	mc.setAttr (sel_fres[0] + '.correct_intensity', 0)
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math1 = mc.ls(selection=True)
-	mc.setAttr(sel_math1[0] + '.floatA', 1)
-	mc.setAttr(sel_math1[0] + '.operation', 1)
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math2 = mc.ls(selection=True)
-	mc.setAttr(sel_math2[0] + '.floatA', 1)
-	mc.setAttr(sel_math2[0] + '.operation', 1)
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorR')
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorG')
-	mc.connectAttr(sel_math2[0] + '.outFloat', sel_fres[0] + '.perp_colorB')
-	mc.connectAttr(inputs + '.refl_roughness', sel_math2[0] + '.floatB')
-
-	mc.shadingNode ('floatMath', asUtility=True, n=inputs + 'floatMath')
-	sel_math3 = mc.ls(selection=True)
-	mc.connectAttr(inputs + '.refl_weight', sel_math3[0] + '.floatA')
-	mc.connectAttr(sel_fres[0] + '.outColorR', sel_math3[0] + '.floatB')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityR')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityG')
-	mc.connectAttr(sel_math3[0] + '.outFloat', inputs + '.refl_reflectivityB')
-
-	mc.connectAttr(sel_math3[0] + '.outFloat', sel_math1[0] + '.floatB')
-	mc.connectAttr(sel_math1[0] + '.outFloat', inputs + '.diffuse_weight')
-
-	mc.connectAttr(inputs + '.refl_roughness', inputs + '.diffuse_roughness')
-
-	mc.shadingNode ('RedshiftFresnel', asUtility=True, n=inputs + '_fresnel')
-	sel_fres2 = mc.ls(selection=True)
-	mc.setAttr (sel_fres2[0] + '.correct_intensity', 0)
-	mc.setAttr (sel_fres2[0] + '.facing_color', 1, 0.766, 0.366)
-	mc.setAttr (sel_fres2[0] + '.perp_color', 1, 0.135, 0.135)
-	mc.connectAttr(sel_fres2[0] + '.outColor', inputs + '.diffuse_color')
-	mc.select (sel_geo[0])
-
 def setsrgb():
 	sel_txt = mc.ls(selection=True, type='file')
 	for i in range(len(sel_txt)):
@@ -958,19 +528,14 @@ def setlin():
 	for i in range(len(sel_txt)):
 		mc.setAttr(sel_txt[i] + '.ignoreColorSpaceFileRules', 1)
 		mc.setAttr(sel_txt[i] + '.cs', 'Utility - Linear - sRGB', type='string')
-def aces():
-	ws = mc.colorManagementPrefs(q=True, renderingSpaceName=True)
-	mc.colorManagementPrefs(e=True, viewTransformName="Log")
-	renderingSpaces = mc.colorManagementPrefs(q=True, renderingSpaceNames=True)
-	viewingTransforms = mc.colorManagementPrefs(q=True, viewTransformNames=True)
-	mc.colorManagementPrefs(e=True, configFilePath="C:/Users/er/Documents/OpenColorIO-Configs-feature-aces-1.2-config/aces_1.2/config.ocio")
-	mc.colorManagementPrefs(e=True, cmConfigFileEnabled=True)
 def group():
 	sel = mc.ls(selection=True)
 	mc.group (sel, name=sel[0] + '_grp')
 	sel = mc.ls(selection=True)
 	temp = sel[0].replace('_geo', '')
 	mc.rename (sel[0], temp)
+	temp2 = sel[0].replace('_1', '')
+	mc.rename (sel[0], temp2)
 
 def autoUV():
 	sel = mc.ls(sl = True, fl = True, dag = True, type= 'mesh')
@@ -991,126 +556,58 @@ def changeName():
 	for i in range(len(sel)):
 		mc.rename (sel[i], input + '_' + str (i + 1))
 def shaderName():
-	input = mc.textField(field2, text = True, query = True)
+	input = mc.textField(field2, text=True, query=True)
+	types = [
+		('shadingEngine', '_sg', False),
+		('RedshiftStandardMaterial', '_s', False),
+		('RedshiftStandardMaterialBlender', '_rsMatBlend', True),
+		('RedshiftDisplacement', '_rsDispl', True),
+		('RedshiftDisplacementBlender', '_rsDisplBlend', True),
+		('RedshiftBumpMap', '_rsBump', True),
+		('RedshiftBumpBlender', '_rsBumpBlend', True),
+		('RedshiftFresnel', '_fresnel', True),
+		('RedshiftColorLayer', '_rsClrLyr', True),
+		('RedshiftColorCorrection', '_rsCC', True),
+		('cloth', '_cloth', True),
+		('place2dTexture', '_place2dTexture', True),
+		('RedshiftAmbientOcclusion', '_rsAO', True),
+		('RedshiftCurvature', '_rsCurv', True),
+		('RedshiftTriPlanar', '_rsTripl', True),
+		('file', '_file', True),
+		('RedshiftNoise', '_rsNoi', True),
+		('remapHsv', '_rmphsv', True),
+		('ramp', '_ramp', True),
+		('fractal', '_fractal', True),
+		('noise', '_noi', True),
+		('layeredTexture', '_layTex', True),
+		('checker', '_checker', True),
+		('blendColors', '_blClr', True),
+		('reverse', '_rvrs', True),
+		('remapColor', '_rmpclr', True),
+		('floatConstant', '_fltConst', True),
+		('RedshiftRaySwitch', '_rsRaySwt', True),
+		('RedshiftSprite', '_rsSprite', True),
+		('substanceNode', '_substance', True),
+		('substanceOutputNode', '_substanceOutput', True),
+		('multiplyDivide', '_multiplyDivide', True),
+		('projection', '_projection', True),
+		('RedshiftRoundCorners', '_rsRoundCrnr', True),
+		('lambert', '_lambert_S', False),
+		('phong', '_PH_S', False),
+		('samplerInfo', '_SInfo', True),
+		('floatMath', '_floatMath', True),
+		('RedshiftIncandescent', '_rsIncd', True),
+		('RedshiftMaxonNoise', '_rsMaxon', True),
+	]
 	sel = mc.ls(selection=True)
 	for i in range(len(sel)):
-		selnode = mc.ls(selection=True, type='shadingEngine')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_sg')
-		selnode = mc.ls(selection=True, type='RedshiftMaterial')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_s')
-		selnode = mc.ls(selection=True, type='RedshiftMaterialBlender')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsMatBlend')
-		selnode = mc.ls(selection=True, type='RedshiftDisplacement')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsDispl')
-		selnode = mc.ls(selection=True, type='RedshiftDisplacementBlender')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsDisplBlend')
-		selnode = mc.ls(selection=True, type='RedshiftBumpMap')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsBump')
-		selnode = mc.ls(selection=True, type='RedshiftBumpBlender')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsBumpBlend')
-		selnode = mc.ls(selection=True, type='RedshiftFresnel')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_fresnel')
-		selnode = mc.ls(selection=True, type='RedshiftColorLayer')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsClrLyr')
-		selnode = mc.ls(selection=True, type='RedshiftColorCorrection')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsCC')
-		selnode = mc.ls(selection=True, type='cloth')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_cloth')
-		selnode = mc.ls(selection=True, type='place2dTexture')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_place2dTexture')
-		selnode = mc.ls(selection=True, type='RedshiftAmbientOcclusion')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsAO')
-		selnode = mc.ls(selection=True, type='RedshiftCurvature')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsCurv')
-		selnode = mc.ls(selection=True, type='RedshiftTriPlanar')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsTripl')
-		selnode = mc.ls(selection=True, type='file')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_file')
-		selnode = mc.ls(selection=True, type='RedshiftNoise')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsNoi')
-		selnode = mc.ls(selection=True, type='remapHsv')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rmphsv')
-		selnode = mc.ls(selection=True, type='ramp')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_ramp')
-		selnode = mc.ls(selection=True, type='fractal')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_fractal')
-		selnode = mc.ls(selection=True, type='noise')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_noi')
-		selnode = mc.ls(selection=True, type='layeredTexture')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_layTex')
-		selnode = mc.ls(selection=True, type='checker')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_checker')
-		selnode = mc.ls(selection=True, type='blendColors')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_blClr')
-		selnode = mc.ls(selection=True, type='reverse')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rvrs')
-		selnode = mc.ls(selection=True, type='remapColor')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rmpclr')
-		selnode = mc.ls(selection=True, type='floatConstant')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_fltConst')
-		selnode = mc.ls(selection=True, type='RedshiftRaySwitch')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsRaySwt')
-		selnode = mc.ls(selection=True, type='RedshiftSprite')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsSprite')
-		selnode = mc.ls(selection=True, type='substanceNode')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_substance')
-		selnode = mc.ls(selection=True, type='substanceOutputNode')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_substanceOutput')
-		selnode = mc.ls(selection=True, type='multiplyDivide')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_multiplyDivide')
-		selnode = mc.ls(selection=True, type='projection')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_projection')
-		selnode = mc.ls(selection=True, type='RedshiftRoundCorners')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsRoundCrnr')
-		selnode = mc.ls(selection=True, type='lambert')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_lambert_S')
-		selnode = mc.ls(selection=True, type='samplerInfo')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_SInfo')
-		selnode = mc.ls(selection=True, type='floatMath')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_floatMath')
-		selnode = mc.ls(selection=True, type='RedshiftIncandescent')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsIncd')
-		selnode = mc.ls(selection=True, type='RedshiftMaxonNoise')
-		for y in range(len(selnode)):
-			mc.rename (selnode[y], input + '_' + str(y+1) + '_rsMaxon')
+		for ntype, suffix, numbered in types:
+			selnode = mc.ls(selection=True, type=ntype)
+			for y in range(len(selnode)):
+				if numbered:
+					mc.rename(selnode[y], input + '_' + str(y + 1) + suffix)
+				else:
+					mc.rename(selnode[y], input + suffix)
 def prefix():
 	input = mc.textField(field2, text = True, query = True)
 	sel = mc.ls(selection=True)
@@ -1128,466 +625,116 @@ def search():
 	for i in range(len(sel)):
 		temp = sel[i].replace(search, input)
 		mc.rename (sel[i], temp)
-def addgeo():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_geo')
-def addgrp():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_grp')
-def addlow():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_low')
-def addhigh():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_high')
-def addlgt():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_lgt')
-def addoff():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_off')
-def adddiff():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_diff')
-def addemis():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_emis')
-def addrefl():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_refl')
-def addrefr():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_refr')
-def addopa():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_opa')
-def addloc():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_loc')
-def addcolor():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + 'Color')
-def addwght():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + 'Wght')
-def addrghn():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + 'Rghn')
-def addcoat():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + 'Coat')
-def addsdk():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_sdk')
-def addS():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_S')
-def addSG():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_SG')
-def addL():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_L')
-def addR():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_R')
-def addtop():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_top')
-def addmid():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_mid')
-def addbot():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_bot')
-def addA():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_A')
-def addB():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_B')
-def addC():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_C')
-def addD():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_D')
-def addE():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_E')
-def addF():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_F')
-def addG():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_G')
-def addH():
-	sel = mc.ls(selection=True)
-	for i in range(len(sel)):
-		mc.rename (sel[i], sel[i].split('|', 1)[-1] + '_H')
+def _addSuffix(suffix):
+	for obj in mc.ls(selection=True):
+		mc.rename(obj, obj.split('|', 1)[-1] + suffix)
+def addgeo(): _addSuffix('_geo')
+def addgrp(): _addSuffix('_grp')
+def addlow(): _addSuffix('_low')
+def addhigh(): _addSuffix('_high')
+def addlgt(): _addSuffix('_lgt')
+def addoff(): _addSuffix('_off')
+def adddiff(): _addSuffix('_diff')
+def addemis(): _addSuffix('_emis')
+def addrefl(): _addSuffix('_refl')
+def addrefr(): _addSuffix('_refr')
+def addopa(): _addSuffix('_opa')
+def addloc(): _addSuffix('_loc')
+def addcolor(): _addSuffix('Color')
+def addwght(): _addSuffix('Wght')
+def addrghn(): _addSuffix('Rghn')
+def addcoat(): _addSuffix('Coat')
+def addsdk(): _addSuffix('_sdk')
+def addS(): _addSuffix('_S')
+def addSG(): _addSuffix('_SG')
+def addL(): _addSuffix('_L')
+def addR(): _addSuffix('_R')
+def addtop(): _addSuffix('_top')
+def addmid(): _addSuffix('_mid')
+def addbot(): _addSuffix('_bot')
+def addA(): _addSuffix('_A')
+def addB(): _addSuffix('_B')
+def addC(): _addSuffix('_C')
+def addD(): _addSuffix('_D')
+def addE(): _addSuffix('_E')
+def addF(): _addSuffix('_F')
+def addG(): _addSuffix('_G')
+def addH(): _addSuffix('_H')
 def redshift():
 	mc.loadPlugin( 'redshift4maya.mll')
 	mc.setAttr("defaultRenderGlobals.currentRenderer", "redshift", type="string")
 def fnrender():
-	mc.currentUnit(time='pal')#(25 fps)
-	mc.setAttr("redshiftOptions.exrForceMultilayer", 1)
-	mc.setAttr("redshiftOptions.autocrop", 0)
-	mc.setAttr("redshiftOptions.imageFormat", 1)
-	mc.setAttr("redshiftOptions.exrCompression", 4)
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 16)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 128)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.01)
-	minTime = mc.playbackOptions (q=True, minTime=True)
-	maxTime = mc.playbackOptions (q=True, maxTime=True)
-	mc.setAttr ('defaultRenderGlobals.startFrame', minTime)
-	mc.setAttr ('defaultRenderGlobals.endFrame', maxTime)
-	filename=mc.file(q=1,sn=1,shn=1)
-	buffer = filename.split('_')
-	rpath = buffer[0] + '\\''render3d''\\' + buffer[0] + '_' + buffer[1] + '\\' + buffer[0] + '_' + buffer[1] + '_render3d'
-	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("redshiftOptions.unifiedFilterType", 2)
-	mc.setAttr("redshiftOptions.unifiedFilterSize", 2)
-	mc.setAttr("redshiftOptions.unifiedMaxOverbright", 1)
-	mc.setAttr("redshiftOptions.glossyRayMaxOverbright", 1)
-	mc.setAttr("defaultRenderGlobals.byFrameStep", 1)
-	mc.setAttr('defaultResolution.height', 1080)
-	mc.setAttr('defaultResolution.width', 1920)
-	mc.setAttr('defaultResolution.lockDeviceAspectRatio', 0)
-	mc.setAttr('defaultResolution.deviceAspectRatio', 1.777)
+	width =float(1440)
+	height = float(2560)
+	deviceAspect = width / height
+	mc.setAttr('defaultResolution.height', height)
+	mc.setAttr('defaultResolution.width', width)
 	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('redshiftOptions.reflectionMaxTraceDepth', 2)
-	mc.setAttr('redshiftOptions.refractionMaxTraceDepth', 4)
-	mc.setAttr('redshiftOptions.combinedMaxTraceDepth', 3)
+	mc.setAttr('defaultResolution.deviceAspectRatio',deviceAspect)
+	rpath = '<scene>/beauty'
+	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
+	mc.setAttr("defaultRenderGlobals.animation", 1)
+	mc.setAttr("redshiftOptions.imageFormat", 1)
+	mc.setAttr('redshiftOptions.unifiedMinSamples', 8)
+	mc.setAttr('redshiftOptions.unifiedMaxSamples', 1024)
+	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.02)
 	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
 	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 4)
+	mc.setAttr("redshiftOptions.numGIBounces", 3)
 	mc.setAttr('redshiftOptions.bruteForceGINumRays', 256)
-	mc.setAttr('redshiftOptions.subsurfaceScatteringRate', -2)
-	mc.setAttr('redshiftOptions.bucketSize', 256)
-	##### AOV DISABLER START #####
-	mc.select (clear=True)
-	aov4=mc.ls('*:*:*:*:rsAov*')
-	aov3=mc.ls('*:*:*:rsAov*')
-	aov2=mc.ls('*:*:rsAov*')
-	aov1=mc.ls('*:rsAov*')
-	aov=mc.ls('*rsAov*')
-	mc.select (clear=True)
-	mc.select (aov, add=True)
-	mc.select (aov1, add=True)
-	mc.select (aov2, add=True)
-	mc.select (aov3, add=True)
-	mc.select (aov4, add=True)
-	fullaov=mc.ls(selection=True)
-	for i in range(len(fullaov)):
-		try:
-			mc.disconnectAttr(fullaov[i] + '_enabled.output', fullaov[i] + '.enabled')
-		except:pass
-		try:
-			   mc.setAttr(fullaov[i] + '.enabled', 0)
-		except:pass
-		try:
-			   mc.setKeyframe( fullaov[i]+'.enabled' )
-		except:pass
-		try:
-			   mc.delete(fullaov[i])
-		except:pass
-	mc.select (clear=True) ##### AOV DISABLER END #####
-def fn4render():
-	mc.currentUnit(time='pal')#(25 fps)
-	mc.setAttr("redshiftOptions.exrForceMultilayer", 1)
-	mc.setAttr("redshiftOptions.autocrop", 0)
-	mc.setAttr("redshiftOptions.imageFormat", 1)
-	mc.setAttr("redshiftOptions.exrCompression", 4)
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 16)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 128)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.01)
-	minTime = mc.playbackOptions (q=True, minTime=True)
-	maxTime = mc.playbackOptions (q=True, maxTime=True)
-	mc.setAttr ('defaultRenderGlobals.startFrame', minTime)
-	mc.setAttr ('defaultRenderGlobals.endFrame', maxTime)
-	filename=mc.file(q=1,sn=1,shn=1)
-	buffer = filename.split('_')
-	rpath = '..\\..\\' 'season04\\render\\' + buffer[0] + '\\''render3d''\\' + buffer[0] + '_' + buffer[1] + '\\' + buffer[0] + '_' + buffer[1] + '_render3d'
-	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("redshiftOptions.unifiedFilterType", 2)
-	mc.setAttr("redshiftOptions.unifiedFilterSize", 2)
-	mc.setAttr("redshiftOptions.unifiedMaxOverbright", 1)
-	mc.setAttr("redshiftOptions.glossyRayMaxOverbright", 1)
-	mc.setAttr("defaultRenderGlobals.byFrameStep", 1)
-	mc.setAttr('defaultResolution.height', 1080)
-	mc.setAttr('defaultResolution.width', 1920)
-	mc.setAttr('defaultResolution.lockDeviceAspectRatio', 0)
-	mc.setAttr('defaultResolution.deviceAspectRatio', 1.777)
-	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('redshiftOptions.reflectionMaxTraceDepth', 2)
-	mc.setAttr('redshiftOptions.refractionMaxTraceDepth', 4)
-	mc.setAttr('redshiftOptions.combinedMaxTraceDepth', 3)
-	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
-	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 4)
-	mc.setAttr('redshiftOptions.bruteForceGINumRays', 256)
-	mc.setAttr('redshiftOptions.subsurfaceScatteringRate', -2)
-	mc.setAttr('redshiftOptions.bucketSize', 256)
-	##### AOV DISABLER START #####
-	mc.select (clear=True)
-	aov4=mc.ls('*:*:*:*:rsAov*')
-	aov3=mc.ls('*:*:*:rsAov*')
-	aov2=mc.ls('*:*:rsAov*')
-	aov1=mc.ls('*:rsAov*')
-	aov=mc.ls('*rsAov*')
-	mc.select (clear=True)
-	mc.select (aov, add=True)
-	mc.select (aov1, add=True)
-	mc.select (aov2, add=True)
-	mc.select (aov3, add=True)
-	mc.select (aov4, add=True)
-	fullaov=mc.ls(selection=True)
-	for i in range(len(fullaov)):
-		try:
-			mc.disconnectAttr(fullaov[i] + '_enabled.output', fullaov[i] + '.enabled')
-		except:pass
-		try:
-			   mc.setAttr(fullaov[i] + '.enabled', 0)
-		except:pass
-		try:
-			   mc.setKeyframe( fullaov[i]+'.enabled' )
-		except:pass
-		try:
-			   mc.delete(fullaov[i])
-		except:pass
-	mc.select (clear=True) ##### AOV DISABLER END #####
+	mc.setAttr('redshiftOptions.denoiseEngine', 3)
+	minTime = mc.playbackOptions(q=True, minTime=True)
+	maxTime = mc.playbackOptions(q=True, maxTime=True)
+	mc.setAttr('defaultRenderGlobals.startFrame', minTime)
+	mc.setAttr('defaultRenderGlobals.endFrame', maxTime)
+	mc.setAttr('defaultRenderGlobals.byFrameStep', 1)
+
 def prerender():
-	mc.currentUnit(time='pal')#(25 fps)
-	mc.setAttr("redshiftOptions.exrForceMultilayer", 1)
-	mc.setAttr("redshiftOptions.autocrop", 0)
-	mc.setAttr("redshiftOptions.imageFormat", 1)
-	mc.setAttr("redshiftOptions.exrCompression", 4)
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 8)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 64)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.01)
-	minTime = mc.playbackOptions (q=True, minTime=True)
-	maxTime = mc.playbackOptions (q=True, maxTime=True)
-	mc.setAttr ('defaultRenderGlobals.startFrame', minTime)
-	mc.setAttr ('defaultRenderGlobals.endFrame', maxTime)
-	filename=mc.file(q=1,sn=1,shn=1)
-	buffer = filename.split('_')
-	rpath = buffer[0] + '\\''render3d''\\' + buffer[0] + '_' + buffer[1] + '\\' + buffer[0] + '_' + buffer[1] + '_render3d'
-	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("redshiftOptions.unifiedFilterType", 2)
-	mc.setAttr("redshiftOptions.unifiedFilterSize", 2)
-	mc.setAttr("redshiftOptions.unifiedMaxOverbright", 1)
-	mc.setAttr("redshiftOptions.glossyRayMaxOverbright", 1)
-	mc.setAttr("defaultRenderGlobals.byFrameStep", 10)
-	mc.setAttr('defaultResolution.height', 720)
-	mc.setAttr('defaultResolution.width', 1280)
-	mc.setAttr('defaultResolution.lockDeviceAspectRatio', 0)
-	mc.setAttr('defaultResolution.deviceAspectRatio', 1.777)
+	width =float(540)
+	height = float(540)
+	deviceAspect = width / height
+	mc.setAttr('defaultResolution.height', height)
+	mc.setAttr('defaultResolution.width', width)
 	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('redshiftOptions.reflectionMaxTraceDepth', 2)
-	mc.setAttr('redshiftOptions.refractionMaxTraceDepth', 4)
-	mc.setAttr('redshiftOptions.combinedMaxTraceDepth', 3)
-	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
-	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 4)
-	mc.setAttr('redshiftOptions.bruteForceGINumRays', 64)
-	mc.setAttr('redshiftOptions.subsurfaceScatteringRate', -2)
-	mc.setAttr('redshiftOptions.bucketSize', 256)
-	##### AOV DISABLER START #####
-	mc.select (clear=True)
-	aov4=mc.ls('*:*:*:*:rsAov*')
-	aov3=mc.ls('*:*:*:rsAov*')
-	aov2=mc.ls('*:*:rsAov*')
-	aov1=mc.ls('*:rsAov*')
-	aov=mc.ls('*rsAov*')
-	mc.select (clear=True)
-	mc.select (aov, add=True)
-	mc.select (aov1, add=True)
-	mc.select (aov2, add=True)
-	mc.select (aov3, add=True)
-	mc.select (aov4, add=True)
-	fullaov=mc.ls(selection=True)
-	for i in range(len(fullaov)):
-		try:
-			mc.disconnectAttr(fullaov[i] + '_enabled.output', fullaov[i] + '.enabled')
-		except:pass
-		try:
-			   mc.setAttr(fullaov[i] + '.enabled', 0)
-		except:pass
-		try:
-			   mc.setKeyframe( fullaov[i]+'.enabled' )
-		except:pass
-		try:
-			   mc.delete(fullaov[i])
-		except:pass
-	mc.select (clear=True) ##### AOV DISABLER END #####
-def pre4render():
-	mc.currentUnit(time='pal')#(25 fps)
-	mc.setAttr("redshiftOptions.exrForceMultilayer", 1)
-	mc.setAttr("redshiftOptions.autocrop", 0)
-	mc.setAttr("redshiftOptions.imageFormat", 1)
-	mc.setAttr("redshiftOptions.exrCompression", 4)
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 8)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 64)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.01)
-	minTime = mc.playbackOptions (q=True, minTime=True)
-	maxTime = mc.playbackOptions (q=True, maxTime=True)
-	mc.setAttr ('defaultRenderGlobals.startFrame', minTime)
-	mc.setAttr ('defaultRenderGlobals.endFrame', maxTime)
-	filename=mc.file(q=1,sn=1,shn=1)
-	buffer = filename.split('_')
-	rpath = '..\\..\\' 'season04\\render\\' + buffer[0] + '\\''render3d''\\' + buffer[0] + '_' + buffer[1] + '\\' + buffer[0] + '_' + buffer[1] + '_render3d'
+	mc.setAttr('defaultResolution.deviceAspectRatio',deviceAspect)
+	rpath = '<scene>/Previsual/prev'
 	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("redshiftOptions.unifiedFilterType", 2)
-	mc.setAttr("redshiftOptions.unifiedFilterSize", 2)
-	mc.setAttr("redshiftOptions.unifiedMaxOverbright", 1)
-	mc.setAttr("redshiftOptions.glossyRayMaxOverbright", 1)
-	mc.setAttr("defaultRenderGlobals.byFrameStep", 10)
-	mc.setAttr('defaultResolution.height', 720)
-	mc.setAttr('defaultResolution.width', 1280)
-	mc.setAttr('defaultResolution.lockDeviceAspectRatio', 0)
-	mc.setAttr('defaultResolution.deviceAspectRatio', 1.777)
-	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('redshiftOptions.reflectionMaxTraceDepth', 2)
-	mc.setAttr('redshiftOptions.refractionMaxTraceDepth', 4)
-	mc.setAttr('redshiftOptions.combinedMaxTraceDepth', 3)
-	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
-	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 4)
-	mc.setAttr('redshiftOptions.bruteForceGINumRays', 64)
-	mc.setAttr('redshiftOptions.subsurfaceScatteringRate', -2)
-	mc.setAttr('redshiftOptions.bucketSize', 256)
-	##### AOV DISABLER START #####
-	mc.select (clear=True)
-	aov4=mc.ls('*:*:*:*:rsAov*')
-	aov3=mc.ls('*:*:*:rsAov*')
-	aov2=mc.ls('*:*:rsAov*')
-	aov1=mc.ls('*:rsAov*')
-	aov=mc.ls('*rsAov*')
-	mc.select (clear=True)
-	mc.select (aov, add=True)
-	mc.select (aov1, add=True)
-	mc.select (aov2, add=True)
-	mc.select (aov3, add=True)
-	mc.select (aov4, add=True)
-	fullaov=mc.ls(selection=True)
-	for i in range(len(fullaov)):
-		try:
-			mc.disconnectAttr(fullaov[i] + '_enabled.output', fullaov[i] + '.enabled')
-		except:pass
-		try:
-			   mc.setAttr(fullaov[i] + '.enabled', 0)
-		except:pass
-		try:
-			   mc.setKeyframe( fullaov[i]+'.enabled' )
-		except:pass
-		try:
-			   mc.delete(fullaov[i])
-		except:pass
-	mc.select (clear=True) ##### AOV DISABLER END #####
+	mc.setAttr("defaultRenderGlobals.animation", 1)
+	mc.setAttr("redshiftOptions.imageFormat", 2)
+	mc.setAttr('redshiftOptions.unifiedMinSamples', 4)
+	mc.setAttr('redshiftOptions.unifiedMaxSamples', 1024)
+	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 3)
+	mc.setAttr('redshiftOptions.primaryGIEngine', 0)
+	mc.setAttr("redshiftOptions.secondaryGIEngine", 0)
+	mc.setAttr("redshiftOptions.numGIBounces", 0)
+	mc.setAttr('redshiftOptions.bruteForceGINumRays', 0)
+	mc.setAttr('redshiftOptions.denoiseEngine', 0)
+
 def oneframerender():
-	mc.currentUnit(time='pal')#(25 fps)
-	mc.setAttr("redshiftOptions.exrForceMultilayer", 1)
-	mc.setAttr("redshiftOptions.autocrop", 0)
-	mc.setAttr("redshiftOptions.imageFormat", 1)
-	mc.setAttr("redshiftOptions.exrCompression", 4)
-	mc.setAttr("defaultRenderGlobals.animation", 1)
-	mc.setAttr('redshiftOptions.unifiedMinSamples', 16)
-	mc.setAttr('redshiftOptions.unifiedMaxSamples', 128)
-	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.01)
-	minTime = mc.playbackOptions (q=True, minTime=True)
-	maxTime = mc.playbackOptions (q=True, maxTime=True)
-	mc.setAttr ('defaultRenderGlobals.startFrame', minTime)
-	mc.setAttr ('defaultRenderGlobals.endFrame', maxTime)
-	filename=mc.file(q=1,sn=1,shn=1)
-	buffer = filename.split('_')
-	rpath = buffer[0] + '\\''render3d''\\' + buffer[0] + '_' + buffer[1] + '\\' + buffer[0] + '_' + buffer[1] + '_render3d'
-	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
-	mc.setAttr("redshiftOptions.unifiedFilterType", 2)
-	mc.setAttr("redshiftOptions.unifiedFilterSize", 2)
-	mc.setAttr("redshiftOptions.unifiedMaxOverbright", 1)
-	mc.setAttr("redshiftOptions.glossyRayMaxOverbright", 1)
-	mc.setAttr("defaultRenderGlobals.byFrameStep", 1)
-	mc.setAttr('defaultResolution.height', 540)
-	mc.setAttr('defaultResolution.width', 960)
-	mc.setAttr('defaultResolution.lockDeviceAspectRatio', 0)
-	mc.setAttr('defaultResolution.deviceAspectRatio', 1.777)
+	width =float(1500)
+	height = float(1500)
+	deviceAspect = width / height
+	mc.setAttr('defaultResolution.height', height)
+	mc.setAttr('defaultResolution.width', width)
 	mc.setAttr('defaultResolution.pixelAspect', 1)
-	mc.setAttr('redshiftOptions.reflectionMaxTraceDepth', 2)
-	mc.setAttr('redshiftOptions.refractionMaxTraceDepth', 4)
-	mc.setAttr('redshiftOptions.combinedMaxTraceDepth', 3)
+	mc.setAttr('defaultResolution.deviceAspectRatio',deviceAspect)
+	rpath = '<scene>/beauty'
+	mc.setAttr('defaultRenderGlobals.imageFilePrefix', rpath, type='string')
+	mc.setAttr("defaultRenderGlobals.animation", 1)
+	mc.setAttr("redshiftOptions.imageFormat", 2)
+	mc.setAttr('redshiftOptions.unifiedMinSamples', 4)
+	mc.setAttr('redshiftOptions.unifiedMaxSamples', 1024)
+	mc.setAttr('redshiftOptions.unifiedAdaptiveErrorThreshold', 0.085)
 	mc.setAttr('redshiftOptions.primaryGIEngine', 4)
 	mc.setAttr("redshiftOptions.secondaryGIEngine", 2)
-	mc.setAttr("redshiftOptions.numGIBounces", 4)
-	mc.setAttr('redshiftOptions.bruteForceGINumRays', 256)
-	mc.setAttr('redshiftOptions.subsurfaceScatteringRate', -2)
-	mc.setAttr('redshiftOptions.bucketSize', 256)
-	##### AOV DISABLER START #####
-	mc.select (clear=True)
-	aov4=mc.ls('*:*:*:*:rsAov*')
-	aov3=mc.ls('*:*:*:rsAov*')
-	aov2=mc.ls('*:*:rsAov*')
-	aov1=mc.ls('*:rsAov*')
-	aov=mc.ls('*rsAov*')
-	mc.select (clear=True)
-	mc.select (aov, add=True)
-	mc.select (aov1, add=True)
-	mc.select (aov2, add=True)
-	mc.select (aov3, add=True)
-	mc.select (aov4, add=True)
-	fullaov=mc.ls(selection=True)
-	for i in range(len(fullaov)):
-		try:
-			mc.disconnectAttr(fullaov[i] + '_enabled.output', fullaov[i] + '.enabled')
-		except:pass
-		try:
-			   mc.setAttr(fullaov[i] + '.enabled', 0)
-		except:pass
-		try:
-			   mc.setKeyframe( fullaov[i]+'.enabled' )
-		except:pass
-		try:
-			   mc.delete(fullaov[i])
-		except:pass
-	mc.select (clear=True) ##### AOV DISABLER END #####
+	mc.setAttr("redshiftOptions.numGIBounces", 3)
+	mc.setAttr('redshiftOptions.bruteForceGINumRays', 2048)
+	mc.setAttr('redshiftOptions.denoiseEngine', 3)
+
 def domelgt(): ##################################### Dome light creation
 	mel.eval('redshiftCreateDomeLight;')
 	list=mc.ls(selection=True)
-	mc.rename (list[0], 'dome_#')
+	mc.rename (list[0], 'domelgt_#')
 	list2=mc.ls(selection=True)
 	mc.setAttr(list2[0]+'.scaleX', 30)
 	mc.setAttr(list2[0]+'.scaleY', 30)
@@ -1595,11 +742,14 @@ def domelgt(): ##################################### Dome light creation
 	mc.setAttr(list2[0]+'.volumeRayContributionScale', 0)
 	mc.setAttr(list2[0]+'.volumeNumSamples', 64)
 	mc.setAttr(list2[0]+'.background_enable', 0)
-	mc.setAttr(list2[0]+'.tex0', 'D:/zorttirik', type='string')
+	hdrDir = 'C:/Users/erbay/Documents/archiveFiles/hdr'
+	picked = mc.fileDialog2(fileMode=1, dialogStyle=2, caption='Select HDR for Dome Light', startingDirectory=hdrDir)
+	if picked:
+		mc.setAttr(list2[0]+'.tex0', picked[0], type='string')
 def arealgt(): ##################################### Area light creation
 	mel.eval('redshiftCreateLight "RedshiftPhysicalLight";')
 	list=mc.ls(selection=True)
-	mc.rename (list[0], 'area_#')
+	mc.rename (list[0], 'arealgt_#')
 	list2=mc.ls(selection=True)
 	mc.setAttr(list2[0]+'.lightType', 0)
 	mc.setAttr(list2[0]+'.scaleX', 10)
@@ -1614,11 +764,12 @@ def arealgt(): ##################################### Area light creation
 	mc.setAttr(list2[0]+'.temperature', 4500)
 	mc.setAttr(list2[0]+'.unitsType', 3)
 	mc.setAttr(list2[0]+'.lumensperwatt', 11)
-	mc.setAttr(list2[0]+'.intensity', 1500)
+	mc.setAttr(list2[0]+'.intensity', 1)
+	mc.setAttr(list2[0]+'.exposure', 12)
 def pointlgt(): ##################################### Point light creation
 	mel.eval('redshiftCreateLight "RedshiftPhysicalLight";')
 	list=mc.ls(selection=True)
-	mc.rename (list[0], 'point_#')
+	mc.rename (list[0], 'pointlgt_#')
 	list2=mc.ls(selection=True)
 	mc.setAttr(list2[0]+'.scaleX', 5)
 	mc.setAttr(list2[0]+'.scaleY', 5)
@@ -1630,11 +781,12 @@ def pointlgt(): ##################################### Point light creation
 	mc.setAttr(list2[0]+'.temperature', 4500)
 	mc.setAttr(list2[0]+'.unitsType', 3)
 	mc.setAttr(list2[0]+'.lumensperwatt', 11)
-	mc.setAttr(list2[0]+'.intensity', 1500)
+	mc.setAttr(list2[0]+'.intensity', 1)
+	mc.setAttr(list2[0]+'.exposure', 12)
 def spotlgt(): ##################################### Spot light creation
 	mel.eval('redshiftCreateLight "RedshiftPhysicalLight";')
 	list=mc.ls(selection=True)
-	mc.rename (list[0], 'spot_#')
+	mc.rename (list[0], 'spotlgt_#')
 	list2=mc.ls(selection=True)
 	mc.setAttr(list2[0]+'.lightType', 2)
 	mc.setAttr(list2[0]+'.scaleX', 5)
@@ -1648,7 +800,8 @@ def spotlgt(): ##################################### Spot light creation
 	mc.setAttr(list2[0]+'.temperature', 4500)
 	mc.setAttr(list2[0]+'.unitsType', 3)
 	mc.setAttr(list2[0]+'.lumensperwatt', 11)
-	mc.setAttr(list2[0]+'.intensity', 1500)
+	mc.setAttr(list2[0]+'.intensity', 1)
+	mc.setAttr(list2[0]+'.exposure', 12)
 def directlgt(): ##################################### Direct light creation
 	mel.eval('redshiftCreateLight "RedshiftPhysicalLight";')
 	list=mc.ls(selection=True)
@@ -1668,74 +821,58 @@ def directlgt(): ##################################### Direct light creation
 	mc.setAttr(list2[0]+'.unitsType', 3)
 	mc.setAttr(list2[0]+'.lumensperwatt', 11)
 	mc.setAttr(list2[0]+'.intensity', 0.5)
-def x1080x1920():
-	mc.setAttr("defaultResolution.height", 1080)
-	mc.setAttr("defaultResolution.width", 1920)
-def x720x1280():
-	mc.setAttr("defaultResolution.height", 720)
-	mc.setAttr("defaultResolution.width", 1280)
-def x540x948():
-	mc.setAttr("defaultResolution.height", 540)
-	mc.setAttr("defaultResolution.width", 948)
-def x1080x1080():
-	mc.setAttr("defaultResolution.height", 1080)
-	mc.setAttr("defaultResolution.width", 1080)
-def x1080x1350():
-	mc.setAttr("defaultResolution.height", 1350)
-	mc.setAttr("defaultResolution.width", 1080)
-def x2148x3840():
-	mc.setAttr("defaultResolution.height", 2148)
-	mc.setAttr("defaultResolution.width", 3840)
-def showjoint():
+def meshlgt():
+	listtransform=mc.ls(selection=True)
+	listmesh=mc.ls(type='mesh')
+	mel.eval('redshiftCreateLight "RedshiftPhysicalLight";')
+	list=mc.ls(selection=True)
+#	mc.rename (list[0], listtransform[0]+'_lgt_#')
+#	list=mc.ls(selection=True)
+	mc.setAttr(list[0]+'.areaShape', 4)
+	mc.setAttr(list[0]+'.areaVisibleInRender', 1)
+	mc.setAttr(list[0]+'.volumeRayContributionScale', 0.01)
+	mc.setAttr(list[0]+'.volumeRayContributionScale', 0.01)
+	mc.setAttr(list[0]+'.volumeNumSamples', 256)
+	mc.setAttr(list[0]+'.unitsType', 3)
+	mc.setAttr(list[0]+'.lumensperwatt', 11)
+	mc.setAttr(list[0]+'.intensity', 1)
+	mc.setAttr(list[0]+'.exposure', 12)
+	mc.select(listmesh[0])
+	mc.select(list[0], add=True)
+	mc.connectAttr(listtransform[0]+'|'+listmesh[0]+'.message', list[0]+'.areaShapeObject')
+	mc.setAttr (listtransform[0]+'.overrideEnabled', 1)
+	mc.setAttr (listtransform[0]+'.overrideLevelOfDetail', 1)
+	mc.setAttr (listtransform[0]+'.primaryVisibility', 0)
+	mc.setAttr (listtransform[0]+'.visibleInReflections', 0)
+	mc.setAttr (listtransform[0]+'.visibleInRefractions', 0)
+	mc.parent (list[0], listtransform[0])
+	mc.select(listtransform[0])
+def _setRes(w, h):
+	w = float(w)
+	h = float(h)
+	mc.setAttr('defaultResolution.height', h)
+	mc.setAttr('defaultResolution.width', w)
+	mc.setAttr('defaultResolution.pixelAspect', 1)
+	mc.setAttr('defaultResolution.deviceAspectRatio', w / h)
+def x1080x1920(): _setRes(1920, 1080)
+def x720x1280(): _setRes(1280, 720)
+def x540x960(): _setRes(960, 540)
+def x1080x1080(): _setRes(1080, 1080)
+def x1920x1080(): _setRes(1080, 1920)
+def x2148x3840(): _setRes(3840, 2160)
+def _togglePanels(flag):
 	for i in range(1, 9):
+		p = 'modelPanel' + str(i)
 		try:
-			query = mc.modelEditor('modelPanel'+str(i), query=True, joints=1)
-			if query==True:
-				mc.modelEditor('modelPanel'+str(i), edit=True, joints=0)
-			else:
-				mc.modelEditor('modelPanel'+str(i), edit=True, joints=1)
+			cur = mc.modelEditor(p, query=True, **{flag: 1})
+			mc.modelEditor(p, edit=True, **{flag: 0 if cur else 1})
 		except:
-			print 'modelPanel' + str(i) + ' not found'
-def showpoly():
-	for i in range(1, 9):
-		try:
-			query = mc.modelEditor('modelPanel'+str(i), query=True, polymeshes=1)
-			if query==True:
-				mc.modelEditor('modelPanel'+str(i), edit=True, polymeshes=0)
-			else:
-				mc.modelEditor('modelPanel'+str(i), edit=True, polymeshes=1)
-		except:
-			print 'modelPanel' + str(i) + ' not found'
-def showcurve():
-	for i in range(1, 9):
-		try:
-			query = mc.modelEditor('modelPanel'+str(i), query=True, nurbsCurves=1)
-			if query==True:
-				mc.modelEditor('modelPanel'+str(i), edit=True, nurbsCurves=0)
-			else:
-				mc.modelEditor('modelPanel'+str(i), edit=True, nurbsCurves=1)
-		except:
-			print 'modelPanel' + str(i) + ' not found'
-def showlight():
-	for i in range(1, 9):
-		try:
-			query = mc.modelEditor('modelPanel'+str(i), query=True, lights=1)
-			if query==True:
-				mc.modelEditor('modelPanel'+str(i), edit=True, lights=0)
-			else:
-				mc.modelEditor('modelPanel'+str(i), edit=True, lights=1)
-		except:
-			print 'modelPanel' + str(i) + ' not found'
-def showcam():
-	for i in range(1, 9):
-		try:
-			query = mc.modelEditor('modelPanel'+str(i), query=True, cameras=1)
-			if query==True:
-				mc.modelEditor('modelPanel'+str(i), edit=True, cameras=0)
-			else:
-				mc.modelEditor('modelPanel'+str(i), edit=True, cameras=1)
-		except:
-			print 'modelPanel' + str(i) + ' not found'
+			print(p + ' not found')
+def showjoint(): _togglePanels('joints')
+def showpoly(): _togglePanels('polymeshes')
+def showcurve(): _togglePanels('nurbsCurves')
+def showlight(): _togglePanels('lights')
+def showcam(): _togglePanels('cameras')
 def showallobjects():
 	for i in range(1, 9):
 		try:
@@ -1747,7 +884,7 @@ def showallobjects():
 			else:
 				mc.modelEditor('modelPanel'+str(i), edit=True, allObjects=1)
 		except:
-			print 'modelPanel' + str(i) + ' not found'
+			print ('modelPanel' + str(i) + ' not found')
 
 #try except pass example:#	for i in ref:
 #try except pass example:#		mc.select(clear=True)
@@ -1755,58 +892,10 @@ def showallobjects():
 #try except pass example:#			mc.select (i+'dumper_r_f_tire_part_11_loGeo1.f[0:17777]', r=True)
 #try except pass example:#		except:pass
 
-def optscene():
-	# Source cleanUpScene.mel
-	# to make scOpt_performOneCleanup available
-	import pymel.core as pm
-	pm.mel.source('cleanUpScene')
-	pm.mel.scOpt_performOneCleanup({'setsOption','partitionOption','transformOption',
-	'displayLayerOption','renderLayerOption','animationCurveOption','clipOption',
-	'poseOption','nurbsSrfOption','deformerOption','unusedSkinInfsOption','groupIDnOption',
-	'ptConOption','pbOption','snapshotOption','unitConversionOption','referencedOption',
-	'brushOption','shaderOption','unknownNodesOption','shadingNetworksOption'})
-	#______cleanup custom python_____________________
-	geometry = mc.ls(geometry=True)
-	#transforms = mc.listRelatives(geometry, p=True, path=True)
-	#mc.select(geometry, r=True)
-	if range(len(geometry)) > 0:
-		mc.loadPlugin( 'redshift4maya.mll')
-		mc.setAttr("defaultRenderGlobals.currentRenderer", "redshift", type="string")
-		sel1 = mc.ls('*rnold*')
-		for i in sel1:
-			mc.delete(sel1)
-		sel2 = mc.ls('*urtle*')
-		for i in sel2:
-			mc.delete(sel2)
-		sel3 = mc.ls('*brush*', type='brush')
-		for i in sel3:
-			mc.delete(sel3)
-		mc.select(clear=True)
-		sel4 = mc.ls('*poly*')
-		sel5 = mc.ls('place2*')
-		sel6 = mc.ls('ramp*')
-		sel7 = mc.ls('file*')
-		mc.select(sel4)
-		mc.select(sel5, add=True)
-		mc.select(sel6, add=True)
-		mc.select(sel7, add=True)
-		print(sel)
-		mc.bakePartialHistory(geometry)#nonDeformerBake
-	else:
-		mc.bakePartialHistory(geometry)#nonDeformerBake
-def turtlekill():
-	unlockError = False
-	nodes = mc.ls()
-	for node in nodes:
-		lockStatus = mc.lockNode( node, q=True )
-		for response in lockStatus:
-			if response != False:
-				try:
-					mc.lockNode( node, lock=False )
-					print 'Unlocked: ' + node
-					mc.delete(nodes)
-				except:
-					print 'Error: Could not unlock ' + node
+def preserveedge():
+	sel = mc.ls(selection=True)
+	for i in sel:
+  		mc.setAttr (i+'Shape.osdFvarBoundary', 1)
 def bokeh():
 	import maya.cmds as mc
 	locator1 = ('cameraLocator')
@@ -1876,7 +965,7 @@ def atmos():
 def unatmos():
 	listatm=mc.listConnections ("redshiftOptions.atmosphere")
 	mc.disconnectAttr ((listatm[0]+".message"), "redshiftOptions.atmosphere")
-	print listatm[0]
+	print (listatm[0])
 	mc.delete (listatm[0])
 def rendercam():
 	mc.camera (centerOfInterest=1,
@@ -1919,14 +1008,13 @@ def checkerfield():
 	#createPlane
 	mc.polyPlane(w=1000, h=1000, sx=10, sy=10, cuv=2, ch=1)
 	plane=mc.ls(selection=True)
-	#createRedshiftMaterial
-	mc.shadingNode ('RedshiftMaterial', asShader=True, name=checker[0]+'_S')
-	mc.setAttr(checker[0] + '_S.refl_brdf', 1)
+	#createRedshiftStandardMaterial
+	mc.shadingNode ('RedshiftStandardMaterial', asShader=True, name=checker[0]+'_S')
 	mc.setAttr(checker[0] + '_S.refl_weight', 0.0)
 	mc.setAttr(checker[0] + '_S.refl_roughness', 0.0)
 	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=checker[0]+ '_SG')
 	mc.connectAttr(checker[0]+'_S.outColor', checker[0]+'_SG.surfaceShader')
-	mc.connectAttr(checker[0]+'.outColor', checker[0]+'_S.diffuse_color')
+	mc.connectAttr(checker[0]+'.outColor', checker[0]+'_S.base_color')
 	mc.select(plane[0])
 	mc.sets(plane[0], edit=True, forceElement=checker[0]+'_SG')
 def nodetype():
@@ -1952,7 +1040,7 @@ def camset():
 	for x in ref:
 		for i in range (1,7):
 			try:
-				print cams[i]
+				print (cams[i])
 			except:pass
 			try:
 				mc.setAttr(x + cams[i]+'.overscan', 1.15)
@@ -2001,10 +1089,9 @@ def lightblocker():
 	mc.setAttr (lightblock[0] + 'Shape.rsShadowReceiver', 0)
 	mc.setAttr (lightblock[0] + 'Shape.rsSelfShadows', 0)
 	mc.setAttr (lightblock[0] + 'Shape.rsAOCaster', 0)
-	mc.shadingNode ('RedshiftMaterial', asShader=True, n=lightblock[0] + '_S')
+	mc.shadingNode ('RedshiftStandardMaterial', asShader=True, n=lightblock[0] + '_S')
 	sel_shader = mc.ls(selection=True)
 	mc.setAttr(sel_shader[0] + '.diffuse_weight', 0)
-	mc.setAttr(sel_shader[0] + '.refl_brdf', 1)
 	mc.setAttr(sel_shader[0] + '.refl_weight', 0)
 	mc.setAttr (sel_shader[0]+ '.opacity_color', 0.4, 0.4, 0.4, type='double3')
 	mc.sets( renderable=True, noSurfaceShader=True, empty=True, name=sel_shader[0] + 'G')
@@ -2082,42 +1169,35 @@ def isolateObject():
 
 def incsave():
 	mel.eval('incrementAndSaveScene 1;')
+def _animRand(attrs):
+	#Add a fresh random offset (within the Min/Max fields) to each checked axis
+	import random
+	try:
+		mn = float(mc.textField(animMin, q=True, text=True))
+	except:
+		mn = 0.0
+	try:
+		mx = float(mc.textField(animMax, q=True, text=True))
+	except:
+		mx = 0.0
+	use = [mc.checkBox(animX, q=True, value=True),
+		mc.checkBox(animY, q=True, value=True),
+		mc.checkBox(animZ, q=True, value=True)]
+	sel = mc.ls(selection=True)
+	for obj in sel:
+		for u, a in zip(use, attrs):
+			if u:
+				try:
+					cur = mc.getAttr(obj + a)
+					mc.setAttr(obj + a, cur + random.uniform(mn, mx))
+				except:
+					pass
 def translate():
-	import random as random
-	from random import uniform as rand
-	sel = mc.ls(selection=True)
-	for i in sel:
-		randomvalue = rand(-0.3,0.3)
-		getx = mc.getAttr(i+".tx")
-		gety = mc.getAttr(i+".ty")
-		getz = mc.getAttr(i+".tz")
-		mc.setAttr(i+".tx", getx + randomvalue)
-		mc.setAttr(i+".ty", gety + randomvalue)
-		mc.setAttr(i+".tz", getz + randomvalue)
+	_animRand(['.tx', '.ty', '.tz'])
 def scale():
-	import random as random
-	from random import uniform as rand
-	sel = mc.ls(selection=True)
-	for i in sel:
-		randomvalue = rand(-0.2,0.2)
-		getx = mc.getAttr(i+".sx")
-		gety = mc.getAttr(i+".sy")
-		getz = mc.getAttr(i+".sz")
-		mc.setAttr(i+".sx", getx + randomvalue)
-		mc.setAttr(i+".sy", gety + randomvalue)
-		mc.setAttr(i+".sz", getz + randomvalue)
+	_animRand(['.sx', '.sy', '.sz'])
 def rotate():
-	import random as random
-	from random import uniform as rand
-	sel = mc.ls(selection=True)
-	for i in sel:
-		randomvalue = rand(-15,15)
-		getx = mc.getAttr(i+".rx")
-		gety = mc.getAttr(i+".ry")
-		getz = mc.getAttr(i+".rz")
-		mc.setAttr(i+".rx", getx + randomvalue)
-		#mc.setAttr(i+".ry", gety + randomvalue)
-		#mc.setAttr(i+".rz", getz + randomvalue)
+	_animRand(['.rx', '.ry', '.rz'])
 def renderview():
 	mel.eval('redshiftRvShow')
 def hyper():
@@ -2136,8 +1216,6 @@ def attspread():
 	mel.eval('SpreadSheetEditor')
 def lightlink():
 	mel.eval('LightCentricLightLinkingEditor')
-def refeditor():
-	mel.eval('ReferenceEditor')
 def rsfeedback():
 	mc.rsRender (showFeedbackDisplay=True)
 
@@ -2178,6 +1256,45 @@ def duplicateshader():
 	sel = mc.ls(selection=True)
 	mc.hyperShade(sel[0], duplicate=True)
 
+def exportdesk():
+	import os
+	desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+	sel = mc.ls(selection=True)
+	for i in range(len(sel)):
+		mc.select (sel, deselect=True)
+		mc.select (sel[i])
+		mc.file(os.path.join(desktop, sel[i]), force = True, options = "v = 0", type = "FBX export", exportSelected = True)
+		mc.select (sel[i], deselect=True)
+	#if not working, reOpen maya
+
+def exportdeskma():
+	import os
+	desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+	sel = mc.ls(selection=True)
+	for i in range(len(sel)):
+		temp = sel[i].replace('_grp', '')
+		zeropiv()
+		zero()
+		fTrans()
+		dHis()
+		mc.file(os.path.join(desktop, temp), force = True, options = "v = 0", type = "mayaAscii", exportSelected = True)
+	#if not working, reOpen maya
+def planarX():
+	sel = mc.ls(selection=True)
+	list = mc.polyListComponentConversion(sel, tf=True)
+	mc.polyProjection(list, type='Planar', md='x')
+	mc.select(list)
+def planarY():
+	sel = mc.ls(selection=True)
+	list = mc.polyListComponentConversion(sel, tf=True)
+	mc.polyProjection(list, type='Planar', md='y')
+	mc.select(list)
+def planarZ():
+	sel = mc.ls(selection=True)
+	list = mc.polyListComponentConversion(sel, tf=True)
+	mc.polyProjection(list, type='Planar', md='z')
+	mc.select(list)
+
 
 mc.loadPlugin( 'redshift4maya.mll')
 mc.setAttr("defaultRenderGlobals.currentRenderer", "redshift", type="string")
@@ -2186,7 +1303,7 @@ mc.setAttr("defaultRenderGlobals.currentRenderer", "redshift", type="string")
 ######################################################################   HOTKEYS  ############################################################
 ##############################################################################################################################################
 
-mc.nameCommand( 'weeToools', annotation='weeToools', command="python(\"execfile('C:/Users/er/Downloads/weeScript.py')\")")
+mc.nameCommand( 'weeToools', annotation='weeToools', command="python(\"import urllib.request,__main__; exec(urllib.request.urlopen('https://raw.githubusercontent.com/ersizzle/weeScript/master/weeScript.py').read().decode('utf-8'), __main__.__dict__)\")")
 mc.hotkey( k='1', alt=True, name='weeToools')
 mc.nameCommand( 'hyper', annotation='hypershade', command='HypershadeWindow')
 mc.hotkey( k='2', alt=True, name='hyper')
@@ -2200,15 +1317,41 @@ mc.nameCommand( 'nodeeditor', annotation='nodeeditor', command='NodeEditorWindow
 mc.hotkey( k='6', alt=True, name='nodeeditor')
 mc.nameCommand('grapheditor', annotation='grapheditor', command='GraphEditor')
 mc.hotkey( k='7', alt=True, name='grapheditor')
+mc.nameCommand('renderSettings', annotation='rendersettings', command='unifiedRenderGlobalsWindow;')
+mc.hotkey( k='a', sht=True, ctl=True, name='renderSettings')
+mc.nameCommand('nameSpaceeditor', annotation='NamespaceEditor', command='NamespaceEditor')
+mc.hotkey( k='x', alt=True, sht=True, name='nameSpaceeditor')
+mc.nameCommand('filePatheditor', annotation='FilePathEditor', command='FilePathEditor')
+mc.hotkey( k='z', alt=True, sht=True, name='filePatheditor')
 
 mc.nameCommand( 'fTrans', annotation='FreezeTransformations', command='python("mc.makeIdentity( apply=True )")', stp='python')
 mc.hotkey( k='q', sht=True, name='fTrans')
 mc.nameCommand( 'dHis', annotation='DeleteHistory', command='python("mc.delete (ch=True)")', stp='python')
 mc.hotkey( k="w", sht=True, name='dHis')
-mc.nameCommand( 'dnondefHis', annotation='DeleteNonDeformerHistory', command='BakeNonDefHistory')
-mc.hotkey( k='e', sht=True, name='dnondefHis')
+mc.nameCommand( 'cpivot', annotation='CenterPivot', command='python("cPiv()")', stp='python')
+mc.hotkey( k='e', sht=True, name='cpivot')
+mc.nameCommand( 'bpivot', annotation='BottomPivot', command='python("bPiv()")', stp='python')
+mc.hotkey( k='e', ctl=True, name='bpivot')
+mc.nameCommand( 'sendzero', annotation='sendZero', command='python("zero()")', stp='python')
+mc.hotkey( k='r', sht=True, name='sendzero')
+mc.nameCommand( 'planarx', annotation='pLanarx', command='python("planarX()")', stp='python')
+mc.hotkey( k='a', sht=True, alt=True, name='planarx')
+mc.nameCommand( 'planary', annotation='pLanary', command='python("planarY()")', stp='python')
+mc.hotkey( k='s', sht=True, alt=True, name='planary')
+mc.nameCommand( 'planarz', annotation='pLanarz', command='python("planarZ()")', stp='python')
+mc.hotkey( k='d', sht=True, alt=True, name='planarz')
+mc.nameCommand( 'exportdesktop', annotation='Exportdeskt', command='python("exportdesk()")', stp='python')
+mc.hotkey( k='t', sht=True, name='exportdesktop')
+mc.nameCommand( 'exportdesktopma', annotation='Exportdesktma', command='python("exportdeskma()")', stp='python')
+mc.hotkey( k='y', sht=True, name='exportdesktopma')
+mc.nameCommand( 'extractf', annotation='ExtractFaces', command='ExtractFace')
+mc.hotkey( k='c', sht=True, name='extractf')
 incrsave = mc.nameCommand('incrsave', annotation='incrsave', command='python("incsave()")', stp='python')
 mc.hotkey(k='Space', ctl=True, sht=True, name='incrsave')
+mc.nameCommand('importt', annotation='import', command='Import', stp='python')
+mc.hotkey(k='I', sht=True, name='importt')
+
+
 
 fselect = mc.nameCommand('fselect', annotation='fselect', command='python("faceselect()")', stp='python')
 mc.hotkey(k='F2', sht=True, name='fselect')
@@ -2221,6 +1364,7 @@ mc.hotkey(k='F1', sht=True, name='obselect')
 dpshader = mc.nameCommand('dpshader', annotation='dpshader', command='python("duplicateshader()")', stp='python')
 mc.hotkey(k='G', sht=True, name='dpshader')
 
+
 mat111 = mc.nameCommand( 'mat111', annotation='mat1', command='python("mat1()")', stp='python')
 mc.hotkey( k='q', sht=True, ctl=True, name='mat111')
 
@@ -2232,26 +1376,19 @@ mel.eval('SavePreferences')
 mel.eval('savePrefs')
 mel.eval('saveToolSettings')
 mel.eval('saveViewportSettings')
-mc.workspaceControl(ui, retain=True, floating=True, uiScript='weeToolsUI()')
+mc.workspaceControl(ui, retain=True, floating=True, uiScript='weeToolsUI()',
+	initialWidth=230, initialHeight=900)
+mc.workspaceControl(ui, e=True, resizeWidth=230)
 
+
+#unknownPlugin -q -l;
+#unknownPlugin -r "rpmaya"
+#unknownPlugin -r "stereoCamera"
+#unknownPlugin -r "Mayatomr"
+#select -r `ls -type unknown`;
+#
 #####################################################################################################################################################
 #####################################################################################################################################################
 #####################################################################################################################################################
 #####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
-#####################################################################################################################################################
+###############################################################################################################################################
