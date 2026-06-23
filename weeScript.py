@@ -81,7 +81,7 @@ def weeToolsUI():
 	addRow(f, [('Displace\nOn', 'disp()', 'teal'), ('Displace\nOff', 'undisp()', 'teal'), ('Backface', 'backface()', 'teal')])
 	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple')])
 	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
-	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('Phong', 'matphong()', 'gray')])
+	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('TexChnge', 'replaceTextures()', 'purple'), ('Phong', 'matphong()', 'gray')])
 	f = section('Name', collapse=False)
 	field1 = addField(f)
 	field2 = addField(f)
@@ -509,6 +509,34 @@ def texcon():
 		mc.connectAttr(selnode[0] +'.vertexUvTwo', selnode[x+1] + '.vertexUvTwo')
 		mc.connectAttr(selnode[0] +'.wrapU', selnode[x+1] + '.wrapU')
 		mc.connectAttr(selnode[0] +'.wrapV', selnode[x+1] + '.wrapV')
+def replaceTextures():
+	#1) count the selected texture (file) nodes
+	sel = mc.ls(selection=True) or []
+	fileNodes = [n for n in sel if mc.nodeType(n) == 'file']
+	if not fileNodes:
+		mc.warning('weeTools: select one or more file (texture) nodes first.')
+		return
+	#2) open a window to pick that many replacement textures from a folder
+	picked = mc.fileDialog2(
+		fileMode=4,  # one or more existing files
+		caption='Select %d replacement texture(s)' % len(fileNodes),
+		okCaption='Replace',
+		fileFilter='Images (*.jpg *.jpeg *.png *.tif *.tiff *.exr *.tga *.tx *.bmp);;All Files (*.*)')
+	if not picked:
+		return
+	if len(picked) != len(fileNodes):
+		mc.warning('weeTools: %d node(s) selected but %d file(s) picked - replacing %d (paired in order).'
+			% (len(fileNodes), len(picked), min(len(fileNodes), len(picked))))
+	#3) replace each selected file node's texture, paired in order
+	count = 0
+	for node, path in zip(fileNodes, picked):
+		try:
+			mc.setAttr(node + '.fileTextureName', path, type='string')
+			count += 1
+		except Exception as e:
+			mc.warning('weeTools: could not set %s -> %s (%s)' % (node, path, e))
+	mc.select(fileNodes)
+	print('weeTools: replaced %d texture(s).' % count)
 def unprimvis():
 	sel = mc.ls(selection=True)
 	for i in sel:
