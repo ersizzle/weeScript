@@ -76,12 +76,6 @@ def weeToolsUI():
 	addRow(f, [('Freeze\nTransform', 'fTrans()', 'gray'), ('Delete\nHistory', 'dHis()', 'coral'), ('Delete\nNon-Def', 'dnondefHis()', 'coral'), ('Center\nPivot', 'cPiv()', 'gray')])
 	addRow(f, [('Send to\nOrigin', 'zero()', 'gray'), ('Build\nTile', 'buildTiles()', 'gray'), ('Tile\nSquare', 'gridTiles()', 'gray'), ('Tile\nRectangle', 'bondTiles()', 'gray'), ('Group', 'group()', 'gray'), ('Auto UV', 'autoUV()', 'amber')])
 	addRow(f, [('UV\nCopy', 'UVcopy()', 'amber'), ('BBox\nOn', 'box()', 'teal'), ('BBox\nOff', 'unbox()', 'teal'), ('Lock\nAttrs', 'lock()', 'blue'), ('Unlock\nAttrs', 'unlock()', 'blue')])
-	f = section('Shading', collapse=False)
-	addRow(f, [('Tess 2', 'tess2()', 'purple'), ('Tess 3', 'tess3()', 'purple'), ('Tess Off', 'untess()', 'purple')])
-	addRow(f, [('Displace\nOn', 'disp()', 'teal'), ('Displace\nOff', 'undisp()', 'teal'), ('Backface', 'backface()', 'teal')])
-	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple')])
-	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
-	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('TexChnge', 'replaceTextures()', 'purple'), ('Phong', 'matphong()', 'gray')])
 	f = section('Name', collapse=False)
 	field1 = addField(f)
 	field2 = addField(f)
@@ -90,6 +84,12 @@ def weeToolsUI():
 	addRow(f, [('+geo', 'addgeo()', 'gray'), ('+grp', 'addgrp()', 'gray'), ('+low', 'addlow()', 'gray'), ('+high', 'addhigh()', 'gray'), ('+lgt', 'addlgt()', 'gray'), ('+off', 'addoff()', 'gray')])
 	addRow(f, [('+S', 'addS()', 'gray'), ('+SG', 'addSG()', 'gray'), ('+L', 'addL()', 'gray'), ('+R', 'addR()', 'gray'), ('+top', 'addtop()', 'gray'), ('+mid', 'addmid()', 'gray'), ('+bot', 'addbot()', 'gray')])
 	addRow(f, [('+A', 'addA()', 'gray'), ('+B', 'addB()', 'gray'), ('+C', 'addC()', 'gray'), ('+D', 'addD()', 'gray'), ('+E', 'addE()', 'gray'), ('+F', 'addF()', 'gray'), ('+G', 'addG()', 'gray'), ('+H', 'addH()', 'gray')])
+	f = section('Shading', collapse=False)
+	addRow(f, [('Tess 2', 'tess2()', 'purple'), ('Tess 3', 'tess3()', 'purple'), ('Tess Off', 'untess()', 'purple')])
+	addRow(f, [('Displace\nOn', 'disp()', 'teal'), ('Displace\nOff', 'undisp()', 'teal'), ('Backface', 'backface()', 'teal')])
+	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple'), ('PBR\nTile', 'pbrTile()', 'purple')])
+	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
+	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('TexChnge', 'replaceTextures()', 'purple'), ('Phong', 'matphong()', 'gray')])
 	f = section('Render', collapse=False)
 	addLabel(f, '  Output')
 	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
@@ -103,7 +103,7 @@ def weeToolsUI():
 	addRow(f, [('Checker', 'checkerfield()', 'gray'), ('Node\nType', 'nodetype()', 'gray'), ('Snap &\nBake', 'snp()', 'gray')])
 	addLabel(f, '  Matte / output')
 	addRow(f, [('Light\nBlocker', 'lightblocker()', 'blue'), ('Matte\nAll', 'matteAll()', 'blue'), ('Matte 1', 'matteOne()', 'blue'), ('Matte\nIsolate', 'isolateObject()', 'blue'), ('Save\nIncr.', 'incsave()', 'gray')])
-	f = section('Display', collapse=False)
+	f = section('Display', collapse=True)
 	addRow(f, [('Joints', 'showjoint()', 'teal'), ('Polys', 'showpoly()', 'teal'), ('Curves', 'showcurve()', 'teal')])
 	addRow(f, [('Lights', 'showlight()', 'teal'), ('Cameras', 'showcam()', 'teal'), ('All', 'showallobjects()', 'teal')])
 	addRow(f, [('Cam\nSetup', 'camset()', 'teal'), ('Focus', 'focussett()', 'teal')])
@@ -208,6 +208,9 @@ def _buildTile(x, z, name, offset_x):
 	mc.delete(min(faces, key=_face_center_y))
 	tf = mc.polyListComponentConversion(cube, tf=True)
 	mc.polyProjection(tf, type='Planar', md='y')
+	#rotate UVs 90deg so the texture matches the tile long/short ratio
+	bb2 = mc.polyEvaluate(cube, boundingBox2d=True)
+	mc.polyEditUV(mc.polyListComponentConversion(cube, tuv=True), pivotU=(bb2[0][0] + bb2[0][1]) / 2.0, pivotV=(bb2[1][0] + bb2[1][1]) / 2.0, angle=90)
 	mc.delete(cube, constructionHistory=True)
 	mc.move(offset_x, 0, 0, cube)
 	bb = mc.xform(cube, q=True, ws=True, bb=True)
@@ -404,7 +407,7 @@ def matphong():
 	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
 	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
 	mc.select (sel_geo[0])
-def _pbrMat(metal, detail, colorlayer=False):
+def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 	#metal True=metallic / False=dielectric(IOR 1.5). detail='bump' or 'displace' (noise-driven). One shared material for the whole selection.
 	#colorlayer=True also builds a Maxon-noise + AO + Curvature network through a RedshiftColorLayer into base_color (layers 1 & 2 enabled).
 	import random
@@ -418,7 +421,7 @@ def _pbrMat(metal, detail, colorlayer=False):
 	mat = mc.shadingNode('RedshiftStandardMaterial', asShader=True, name=name + '_S')
 	mc.setAttr(mat + '.base_color', r, g, b, type='double3')
 	mc.setAttr(mat + '.refl_weight', 1)
-	mc.setAttr(mat + '.refl_roughness', 0.4)
+	mc.setAttr(mat + '.refl_roughness', 0)
 	if metal:
 		mc.setAttr(mat + '.metalness', 1)
 	else:
@@ -430,9 +433,14 @@ def _pbrMat(metal, detail, colorlayer=False):
 	mc.connectAttr(mat + '.outColor', sg + '.surfaceShader', force=True)
 	mc.sets(sel_geo, edit=True, forceElement=sg)
 	noise = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name=name + '_rsMaxon')
-	for _a, _v in [('.scale', 5), ('.globalScale', 100)]:
+	if noise_type is not None:
 		try:
-			mc.setAttr(noise + _a, _v)
+			mc.setAttr(noise + '.noise_type', noise_type)
+		except:
+			pass
+	if noise_scale is not None:
+		try:
+			mc.setAttr(noise + '.coord_scale_global', noise_scale)
 		except:
 			pass
 	if detail == 'bump':
@@ -515,6 +523,7 @@ def _pbrMat(metal, detail, colorlayer=False):
 			pass
 	mc.select(sel_geo)
 def pbrBD(): _pbrMat(False, 'bump', colorlayer=True)
+def pbrTile(): _pbrMat(False, 'bump', colorlayer=True, noise_type=10, noise_scale=0.93)  # 10 = Luka
 
 def mat1():
 	import random as random
