@@ -74,7 +74,7 @@ def weeToolsUI():
 	main = mc.columnLayout(adjustableColumn=True, rowSpacing=1, width=W)
 	f = section('Modeling', collapse=False)
 	addRow(f, [('Freeze\nTransform', 'fTrans()', 'gray'), ('Delete\nHistory', 'dHis()', 'coral'), ('Delete\nNon-Def', 'dnondefHis()', 'coral'), ('Center\nPivot', 'cPiv()', 'gray')])
-	addRow(f, [('Send to\nOrigin', 'zero()', 'gray'), ('Enable\nReference', 'refEnable()', 'gray'), ('Group', 'group()', 'gray'), ('Auto UV', 'autoUV()', 'amber')])
+	addRow(f, [('Send to\nOrigin', 'zero()', 'gray'), ('Build\nTile', 'buildTiles()', 'gray'), ('Tile\nSquare', 'gridTiles()', 'gray'), ('Tile\nRectangle', 'bondTiles()', 'gray'), ('Group', 'group()', 'gray'), ('Auto UV', 'autoUV()', 'amber')])
 	addRow(f, [('UV\nCopy', 'UVcopy()', 'amber'), ('BBox\nOn', 'box()', 'teal'), ('BBox\nOff', 'unbox()', 'teal'), ('Lock\nAttrs', 'lock()', 'blue'), ('Unlock\nAttrs', 'unlock()', 'blue')])
 	f = section('Shading', collapse=False)
 	addRow(f, [('Tess 2', 'tess2()', 'purple'), ('Tess 3', 'tess3()', 'purple'), ('Tess Off', 'untess()', 'purple')])
@@ -97,7 +97,7 @@ def weeToolsUI():
 	addRow(f, [('Dome', 'domelgt()', 'amber'), ('Area', 'arealgt()', 'amber'), ('Point', 'pointlgt()', 'amber')])
 	addRow(f, [('Spot', 'spotlgt()', 'amber'), ('Direct.', 'directlgt()', 'amber'), ('Mesh\nLight', 'meshlgt()', 'amber')])
 	addLabel(f, '  Resolution')
-	addRow(f, [('1920\n1080', 'x1080x1920()', 'gray'), ('1280\n720', 'x720x1280()', 'gray'), ('960\n540', 'x540x960()', 'gray'), ('1080\n1080', 'x1080x1080()', 'gray'), ('1080\n1920', 'x1920x1080()', 'gray'), ('3840\n2160', 'x2148x3840()', 'gray')])
+	addRow(f, [('1280\n720', 'x720x1280()', 'gray'), ('1080\n1080', 'x1080x1080()', 'gray'), ('1920\n1080', 'x1080x1920()', 'gray'), ('1080\n1920', 'x1920x1080()', 'gray'), ('2560\n1440', 'x1440x2560()', 'gray'), ('1440\n2560', 'x2560x1440()', 'gray'), ('3840\n2160', 'x2148x3840()', 'gray'), ('2160\n3840', 'x3840x2160()', 'gray')])
 	addLabel(f, '  Scene tools')
 	addRow(f, [('Preserve\nEdge', 'preserveedge()', 'gray'), ('Bokeh', 'bokeh()', 'blue'), ('Locator', 'targetselect()', 'gray'), ('Render\nCam', 'rendercam()', 'blue')])
 	addRow(f, [('Checker', 'checkerfield()', 'gray'), ('Node\nType', 'nodetype()', 'gray'), ('Snap &\nBake', 'snp()', 'gray')])
@@ -191,11 +191,157 @@ def unlock():
 		mc.setAttr (i+'.sx', lock=False)
 		mc.setAttr (i+'.sy', lock=False)
 		mc.setAttr (i+'.sz', lock=False)
-def refEnable():
-	sel_b = mc.ls(selection=True)
-	for i in sel_b:
-		mc.setAttr (i+'Shape.overrideEnabled', 1)
-		mc.setAttr (i+'Shape.overrideDisplayType', 2)
+def _face_center_y(f):
+	verts = mc.ls(mc.polyListComponentConversion(f, ff=True, tv=True), flatten=True)
+	ys = [mc.pointPosition(v, world=True)[1] for v in verts]
+	return sum(ys) / len(ys)
+def _buildTile(x, z, name, offset_x):
+	#one master tile: box -> top-edge grout chamfer -> drop bottom face ->
+	#UV from top (planar Y) -> pivot to base.  thickness 0.76cm, grout 0.15.
+	cube = mc.polyCube(w=x, h=0.76, d=z, name=name)[0]
+	faces = mc.ls(cube + '.f[*]', flatten=True)
+	top_face = max(faces, key=_face_center_y)
+	top_edges = mc.ls(mc.polyListComponentConversion(top_face, ff=True, te=True), flatten=True)
+	mc.polyBevel3(top_edges, offset=0.15, offsetAsFraction=False, segments=1, depth=1, worldSpace=True, autoFit=True, mergeVertices=True, smoothingAngle=30)
+	mc.delete(cube, constructionHistory=True)
+	faces = mc.ls(cube + '.f[*]', flatten=True)
+	mc.delete(min(faces, key=_face_center_y))
+	tf = mc.polyListComponentConversion(cube, tf=True)
+	mc.polyProjection(tf, type='Planar', md='y')
+	mc.delete(cube, constructionHistory=True)
+	mc.move(offset_x, 0, 0, cube)
+	bb = mc.xform(cube, q=True, ws=True, bb=True)
+	mc.xform(cube, ws=True, piv=((bb[0] + bb[3]) / 2.0, bb[1], (bb[2] + bb[5]) / 2.0))
+	return cube
+def buildTiles():
+	import re
+	presets = {'33 x 66': (66.0, 33.0), '33 x 33': (33.0, 33.0), '15 x 15': (15.0, 15.0)}
+	size = mc.confirmDialog(title='Tile size', message='Choose tile dimensions (cm):', button=['33 x 66', '33 x 33', '15 x 15', 'Custom', 'Cancel'], defaultButton='33 x 66', cancelButton='Cancel', dismissString='Cancel')
+	if size in (None, 'Cancel', ''):
+		return
+	if size == 'Custom':
+		r = mc.promptDialog(title='Custom size', message='Short x Long in cm (e.g. 20x40):', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+		if r != 'OK':
+			return
+		nums = re.findall(r'[\d.]+', mc.promptDialog(q=True, text=True))
+		if len(nums) < 2:
+			mc.warning('weeTools: enter two numbers, e.g. 20x40.')
+			return
+		short, long_ = float(nums[0]), float(nums[1])
+		x, z = long_, short
+		token = '%gx%g' % (short, long_)
+	else:
+		x, z = presets[size]
+		token = size.replace(' ', '')
+	r = mc.promptDialog(title='Tile count', message='How many tiles do you need?', text='4', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+	if r != 'OK':
+		return
+	try:
+		count = int(float(mc.promptDialog(q=True, text=True)))
+	except ValueError:
+		mc.warning('weeTools: tile count must be a number.')
+		return
+	if count < 1:
+		mc.warning('weeTools: need at least 1 tile.')
+		return
+	made = []
+	for i in range(count):
+		nm = 'tile_%s_%02d_geo' % (token, i + 1)
+		made.append(_buildTile(x, z, nm, i * (x + 5.0)))
+	mc.select(made)
+	print('weeTools: created %d x %scm tile(s).' % (count, token))
+def gridTiles():
+	#square-tile grid fill: instance the selected tile(s) across an area with
+	#random 0/90/180/270 rotation.  asks for the (single) square tile size.
+	import random
+	sel = mc.ls(selection=True)
+	if not sel:
+		mc.warning('weeTools: select one or more square tile object(s) first.')
+		return
+	r = mc.promptDialog(title='Square tile size', message='Tile size in cm (square - one value):', text='15', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+	if r != 'OK':
+		return
+	try:
+		size = float(mc.promptDialog(q=True, text=True))
+	except ValueError:
+		mc.warning('weeTools: tile size must be a number.')
+		return
+	if size <= 0:
+		mc.warning('weeTools: tile size must be greater than 0.')
+		return
+	a = mc.promptDialog(title='Total area', message='Total area W x L in cm (e.g. 600x600, one value = square):', text='600x600', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+	if a != 'OK':
+		return
+	import re
+	nums = re.findall(r'[\d.]+', mc.promptDialog(q=True, text=True))
+	if not nums:
+		mc.warning('weeTools: enter the area size, e.g. 600x600.')
+		return
+	AREA_W = float(nums[0])
+	AREA_H = float(nums[1]) if len(nums) > 1 else AREA_W
+	cols = int(AREA_W // size)
+	rows = int(AREA_H // size)
+	used = set()
+	for row in range(rows):
+		for col in range(cols):
+			avail = [t for t in sel if t not in used]
+			if not avail:
+				used.clear()
+				avail = sel
+			tile = random.choice(avail)
+			used.add(tile)
+			inst = mc.instance(tile, name='%s_%d_%d' % (tile, row, col))
+			mc.move(col * size, 0, row * size, inst)
+			mc.rotate(0, random.choice([0, 90, 180, 270]), 0, inst)
+			if len(used) >= len(sel):
+				used.clear()
+	print('weeTools: generated %dx%d square tile grid at %gcm.' % (cols, rows, size))
+def bondTiles():
+	#running-bond fill for rectangular tiles: instance the selected tile(s) in a
+	#half-offset brick pattern with random 0/180 rotation and a grout gap.
+	#asks for the tile size (short x long) and the total area.
+	import random, math, re
+	sel = mc.ls(selection=True)
+	if not sel:
+		mc.warning('weeTools: select one or more rectangular tile object(s) first.')
+		return
+	t = mc.promptDialog(title='Tile size', message='Tile short x long in cm (e.g. 33x66):', text='33x66', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+	if t != 'OK':
+		return
+	tn = re.findall(r'[\d.]+', mc.promptDialog(q=True, text=True))
+	if len(tn) < 2:
+		mc.warning('weeTools: enter two numbers, e.g. 33x66.')
+		return
+	tile_z, tile_x = float(tn[0]), float(tn[1])   # short -> Z, long -> X
+	a = mc.promptDialog(title='Total area', message='Total area W x L in cm (e.g. 600x600, one value = square):', text='600x600', button=['OK', 'Cancel'], defaultButton='OK', cancelButton='Cancel', dismissString='Cancel')
+	if a != 'OK':
+		return
+	an = re.findall(r'[\d.]+', mc.promptDialog(q=True, text=True))
+	if not an:
+		mc.warning('weeTools: enter the area size, e.g. 600x600.')
+		return
+	area_w = float(an[0])
+	area_l = float(an[1]) if len(an) > 1 else area_w
+	step_x = tile_x
+	step_z = tile_z
+	cols = int(math.ceil(area_w / step_x)) + 1
+	rows = int(math.ceil(area_l / step_z))
+	used = set()
+	for row in range(rows):
+		x_off = (step_x / 2.0) if (row % 2) else 0.0
+		for col in range(cols):
+			avail = [o for o in sel if o not in used]
+			if not avail:
+				used.clear()
+				avail = sel
+			tile = random.choice(avail)
+			used.add(tile)
+			inst = mc.instance(tile, name='%s_r%d_c%d' % (tile, row, col))
+			mc.move(col * step_x - x_off, 0, row * step_z, inst)
+			mc.rotate(0, random.choice([0, 180]), 0, inst)
+			if len(used) >= len(sel):
+				used.clear()
+	print('weeTools: generated %dx%d running-bond grid (tile %gx%g).' % (cols, rows, tile_z, tile_x))
 def tess2():
 	sel = mc.ls(selection=True)
 	for i in sel:
@@ -863,10 +1009,12 @@ def _setRes(w, h):
 	mc.setAttr('defaultResolution.deviceAspectRatio', w / h)
 def x1080x1920(): _setRes(1920, 1080)
 def x720x1280(): _setRes(1280, 720)
-def x540x960(): _setRes(960, 540)
+def x1440x2560(): _setRes(2560, 1440)
 def x1080x1080(): _setRes(1080, 1080)
 def x1920x1080(): _setRes(1080, 1920)
 def x2148x3840(): _setRes(3840, 2160)
+def x2560x1440(): _setRes(1440, 2560)
+def x3840x2160(): _setRes(2160, 3840)
 def _togglePanels(flag):
 	for i in range(1, 9):
 		p = 'modelPanel' + str(i)
