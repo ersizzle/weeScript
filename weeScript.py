@@ -253,6 +253,39 @@ def buildTiles():
 		made.append(_buildTile(x, z, nm, i * (x + 5.0)))
 	mc.select(made)
 	print('weeTools: created %d x %scm tile(s).' % (count, token))
+def _trimTileScatter(made, area_w, area_l):
+	#1 instances->objects | 2 delete history+freeze, group, duplicate, hide first
+	#3 combine the second group | 4 box at the area size | 5 intersection boolean
+	#(box first, then mesh) | 6 group box+mesh so the live boolean follows.
+	if not made:
+		return
+	# 1) scattered instances -> objects
+	mc.select(made)
+	mel.eval('ConvertInstanceToObject;')
+	# 2) those same tiles: delete history, freeze, group, duplicate, hide first
+	tiles = [t for t in made if mc.objExists(t)]
+	mc.delete(tiles, constructionHistory=True)
+	mc.makeIdentity(tiles, apply=True, translate=True, rotate=True, scale=True)
+	grp = mc.group(tiles, name='tiles_grp#')
+	dup = mc.duplicate(grp)[0]
+	mc.hide(grp)
+	# 3) combine the duplicated group
+	kids = mc.listRelatives(dup, children=True, fullPath=True)
+	combined = mc.polyUnite(kids, constructionHistory=False, name='tiles_combined#')[0]
+	# 4) box at the area size, bottom aligned to the tiles' actual bottom level
+	tb = mc.xform(combined, q=True, ws=True, bb=True)   # tiles bbox -> tb[1] = bottom
+	box = mc.polyCube(w=area_w, h=10.0, d=area_l, name='tile_trim_box#')[0]
+	mc.move(area_w / 2.0, tb[1] + 5.0, area_l / 2.0, box, absolute=True)   # center+5 -> bottom on tiles
+	bb = mc.xform(box, q=True, ws=True, bb=True)
+	mc.xform(box, ws=True, piv=((bb[0] + bb[3]) / 2.0, bb[1], (bb[2] + bb[5]) / 2.0))
+	# 5) box first, then the combined mesh; intersection boolean
+	mc.select(box)
+	mc.select(combined, add=True)
+	mel.eval('polyPerformBooleanAction 3 o 0;')
+	# 6) group box + mesh so moving the group carries the live boolean result
+	keep = [n for n in (box, combined) if mc.objExists(n)]
+	if keep:
+		mc.select(mc.group(keep, name='tile_trim_grp#'))
 def gridTiles():
 	#square-tile grid fill: instance the selected tile(s) across an area with
 	#random 0/90/180/270 rotation.  asks for the (single) square tile size.
@@ -285,6 +318,7 @@ def gridTiles():
 	cols = int(AREA_W // size)
 	rows = int(AREA_H // size)
 	used = set()
+	made = []
 	for row in range(rows):
 		for col in range(cols):
 			avail = [t for t in sel if t not in used]
@@ -296,9 +330,11 @@ def gridTiles():
 			inst = mc.instance(tile, name='%s_%d_%d' % (tile, row, col))
 			mc.move(col * size, 0, row * size, inst)
 			mc.rotate(0, random.choice([0, 90, 180, 270]), 0, inst)
+			made += inst
 			if len(used) >= len(sel):
 				used.clear()
 	print('weeTools: generated %dx%d square tile grid at %gcm.' % (cols, rows, size))
+	_trimTileScatter(made, AREA_W, AREA_H)
 def bondTiles():
 	#running-bond fill for rectangular tiles: instance the selected tile(s) in a
 	#half-offset brick pattern with random 0/180 rotation and a grout gap.
@@ -330,6 +366,7 @@ def bondTiles():
 	cols = int(math.ceil(area_w / step_x)) + 1
 	rows = int(math.ceil(area_l / step_z))
 	used = set()
+	made = []
 	for row in range(rows):
 		x_off = (step_x / 2.0) if (row % 2) else 0.0
 		for col in range(cols):
@@ -342,9 +379,11 @@ def bondTiles():
 			inst = mc.instance(tile, name='%s_r%d_c%d' % (tile, row, col))
 			mc.move(col * step_x - x_off, 0, row * step_z, inst)
 			mc.rotate(0, random.choice([0, 180]), 0, inst)
+			made += inst
 			if len(used) >= len(sel):
 				used.clear()
 	print('weeTools: generated %dx%d running-bond grid (tile %gx%g).' % (cols, rows, tile_z, tile_x))
+	_trimTileScatter(made, area_w, area_l)
 def tess2():
 	sel = mc.ls(selection=True)
 	for i in sel:
