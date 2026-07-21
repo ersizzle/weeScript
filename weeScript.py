@@ -477,6 +477,8 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 			mc.setAttr(noise + '.noise_type', noise_type)
 		except:
 			pass
+	if noise_scale is None and detail == 'bump':
+		noise_scale = 4.0
 	if noise_scale is not None:
 		try:
 			mc.setAttr(noise + '.coord_scale_global', noise_scale)
@@ -490,7 +492,7 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 		except:
 			pass
 		try:
-			mc.setAttr(bump + '.scale', 0.2)
+			mc.setAttr(bump + '.scale', 0.030)
 		except:
 			pass
 		mc.connectAttr(bump + '.out', mat + '.bump_input', force=True)
