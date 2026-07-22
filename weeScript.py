@@ -90,7 +90,7 @@ def weeToolsUI():
 	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple'), ('PBR\nTile', 'pbrTile()', 'purple')])
 	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
 	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('TexChnge', 'replaceTextures()', 'purple'), ('Phong', 'matphong()', 'gray')])
-	addRow(f, [('Delete\nKeep Conn', 'delBypass()', 'coral')])
+	addRow(f, [('Delete\nKeep Conn', 'delBypass()', 'coral'), ('Remap\nHSV', 'remapHsv()', 'purple')])
 	f = section('Render', collapse=False)
 	addLabel(f, '  Output')
 	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
@@ -773,6 +773,38 @@ def delBypass():
 		_bridgeConnections(node)
 	mc.delete(sel)
 	print('weeTools: deleted %d node(s), bridged their connections.' % len(sel))
+def _insertRemapHsv(node):
+	#splice a remapHsv into node's outgoing color connection: node.outColor -> remapHsv.color -> (node's old destinations)
+	outConns = mc.listConnections(node, source=False, destination=True, connections=True, plugs=True, skipConversionNodes=True) or []
+	if not outConns:
+		mc.warning('weeTools: %s has no outgoing connections to insert into.' % node)
+		return None
+	pairs = [(outConns[i], outConns[i + 1]) for i in range(0, len(outConns), 2)]
+	srcPlugs = sorted(set(p[0] for p in pairs))
+	mainSrc = next((p for p in srcPlugs if p.endswith('.outColor')), srcPlugs[0])
+	if len(srcPlugs) > 1:
+		mc.warning('weeTools: %s has multiple output attrs connected (%s) - inserting on %s only.' % (node, ', '.join(srcPlugs), mainSrc))
+	destinations = [d for s, d in pairs if s == mainSrc]
+	remap = mc.shadingNode('remapHsv', asUtility=True, name=node.split('|')[-1] + '_rmphsv#')
+	mc.connectAttr(mainSrc, remap + '.color', force=True)
+	for dstPlug in destinations:
+		try:
+			mc.connectAttr(remap + '.outColor', dstPlug, force=True)
+		except Exception as e:
+			mc.warning('weeTools: could not connect remapHsv.outColor -> %s (%s)' % (dstPlug, e))
+	return remap
+def remapHsv():
+	sel = mc.ls(selection=True) or []
+	made = []
+	if not sel:
+		made.append(mc.shadingNode('remapHsv', asUtility=True, name='remapHsv#'))
+	else:
+		for node in sel:
+			r = _insertRemapHsv(node)
+			if r:
+				made.append(r)
+	if made:
+		mc.select(made)
 def unprimvis():
 	sel = mc.ls(selection=True)
 	for i in sel:
