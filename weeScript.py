@@ -90,6 +90,7 @@ def weeToolsUI():
 	addRow(f, [('PBR\nB_D', 'pbrBD()', 'purple'), ('PBR\nB_M', 'pbrBM()', 'purple'), ('PBR\nD_D', 'pbrDD()', 'purple'), ('PBR\nD_M', 'pbrDM()', 'purple'), ('PBR\nTile', 'pbrTile()', 'purple')])
 	addRow(f, [('PrimVis\nOn', 'primvis()', 'teal'), ('PrimVis\nOff', 'unprimvis()', 'teal')])
 	addRow(f, [('sRGB', 'setsrgb()', 'purple'), ('Linear', 'setlin()', 'purple'), ('TexConn', 'texcon()', 'purple'), ('TexChnge', 'replaceTextures()', 'purple'), ('Phong', 'matphong()', 'gray')])
+	addRow(f, [('Delete\nKeep Conn', 'delBypass()', 'coral')])
 	f = section('Render', collapse=False)
 	addLabel(f, '  Output')
 	addRow(f, [('RS', 'redshift()', 'blue'), ('Final', 'fnrender()', 'blue'), ('Pre', 'prerender()', 'blue'), ('Atmos', 'atmos()', 'purple'), ('Un-\nAtmos', 'unatmos()', 'purple')])
@@ -733,6 +734,45 @@ def replaceTextures():
 			mc.warning('weeTools: could not set %s -> %s (%s)' % (node, path, e))
 	mc.select(fileNodes)
 	print('weeTools: replaced %d texture(s).' % count)
+def _bridgeConnections(node):
+	#reconnect what fed INTO node straight to what node fed OUT to, so deleting
+	#node doesn't break the network. same-attribute name match first (relay
+	#nodes reusing one plug name), then a single-input fan-out fallback.
+	inConns = mc.listConnections(node, source=True, destination=False, connections=True, plugs=True, skipConversionNodes=True) or []
+	incoming = {}
+	for i in range(0, len(inConns), 2):
+		incoming[inConns[i].split('.', 1)[1]] = inConns[i + 1]
+	outConns = mc.listConnections(node, source=False, destination=True, connections=True, plugs=True, skipConversionNodes=True) or []
+	outgoing = {}
+	for i in range(0, len(outConns), 2):
+		outgoing.setdefault(outConns[i].split('.', 1)[1], []).append(outConns[i + 1])
+	bridged = set()
+	for attr, srcPlug in incoming.items():
+		for dstPlug in outgoing.get(attr, []):
+			try:
+				mc.connectAttr(srcPlug, dstPlug, force=True)
+				bridged.add(dstPlug)
+			except Exception as e:
+				mc.warning('weeTools: could not bridge %s -> %s (%s)' % (srcPlug, dstPlug, e))
+	remaining = [p for plugs in outgoing.values() for p in plugs if p not in bridged]
+	if remaining and len(incoming) == 1:
+		srcPlug = list(incoming.values())[0]
+		for dstPlug in remaining:
+			try:
+				mc.connectAttr(srcPlug, dstPlug, force=True)
+			except Exception as e:
+				mc.warning('weeTools: could not bridge %s -> %s (%s)' % (srcPlug, dstPlug, e))
+	elif remaining:
+		mc.warning('weeTools: %s has multiple inputs/outputs - could not auto-match %s' % (node, ', '.join(remaining)))
+def delBypass():
+	sel = mc.ls(selection=True) or []
+	if not sel:
+		mc.warning('weeTools: select one or more nodes to delete.')
+		return
+	for node in sel:
+		_bridgeConnections(node)
+	mc.delete(sel)
+	print('weeTools: deleted %d node(s), bridged their connections.' % len(sel))
 def unprimvis():
 	sel = mc.ls(selection=True)
 	for i in sel:
