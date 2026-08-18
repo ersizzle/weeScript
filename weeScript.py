@@ -447,18 +447,18 @@ def matphong():
 	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
 	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
 	mc.select (sel_geo[0])
-def _setNoiseType(node, label):
-	#Set a RedshiftMaxonNoise .noise_type by its UI name ('Stupl', 'Turbulence', ...).
-	#The enum order differs between Redshift builds, so look the name up at runtime
-	#instead of hard-coding an index.  Returns the index used, or None.
+def _setEnumByName(node, attr, label, warn=True):
+	#Set an enum attribute by its UI name (noise_type 'Stupl', blend mode 'Add', ...).
+	#Enum order differs between Redshift builds, so look the name up at runtime instead
+	#of hard-coding an index.  Returns the index used, or None if the name wasn't found.
 	names = []
 	try:
-		e = mc.attributeQuery('noise_type', node=node, listEnum=True)
+		e = mc.attributeQuery(attr, node=node, listEnum=True)
 		if e:
 			names = e[0].split(':')
 	except:
 		pass
-	want = label.replace(' ', '').lower()
+	want = label.replace(' ', '').replace('_', '').lower()
 	for i, nm in enumerate(names):
 		idx = i
 		if '=' in nm:
@@ -467,14 +467,37 @@ def _setNoiseType(node, label):
 				idx = int(v)
 			except:
 				idx = i
-		if nm.replace(' ', '').lower() == want:
+		if nm.replace(' ', '').replace('_', '').lower() == want:
 			try:
-				mc.setAttr(node + '.noise_type', idx)
+				mc.setAttr(node + '.' + attr, idx)
 				return idx
 			except:
 				return None
-	mc.warning('weeTools: Maxon noise type "%s" not found on %s.' % (label, node))
+	if warn:
+		mc.warning('weeTools: "%s" is not a valid %s on %s.' % (label, attr, node))
 	return None
+#Verified-in-Maya indices for RedshiftMaxonNoise .noise_type.  attributeQuery(listEnum=True)
+#returns a list that does NOT line up with the Maxon noise dropdown on this build (matching by
+#name landed on 'Sema' for both Stupl and Turbulence), so known types are pinned here.
+MAXON_NOISE = {
+	'stupl': 20,
+	'turbulence': 21,
+}
+def _setNoiseType(node, ntype):
+	#Set a RedshiftMaxonNoise .noise_type from an int index, or a name in MAXON_NOISE.
+	#Unknown names fall back to the (unreliable) enum-name lookup.
+	if isinstance(ntype, str):
+		idx = MAXON_NOISE.get(ntype.replace(' ', '').lower())
+		if idx is None:
+			return _setEnumByName(node, 'noise_type', ntype)
+	else:
+		idx = ntype
+	try:
+		mc.setAttr(node + '.noise_type', idx)
+		return idx
+	except:
+		mc.warning('weeTools: could not set noise_type %s on %s.' % (ntype, node))
+		return None
 def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None, ss_weight=None, roughlayer=False):
 	#metal True=metallic / False=dielectric(IOR 1.5). detail='bump' or 'displace' (noise-driven) or None for no detail node at all. One shared material for the whole selection.
 	#colorlayer=True also builds a Maxon-noise + AO + Curvature network through a RedshiftColorLayer into base_color (layers 1 & 2 enabled).
@@ -606,13 +629,21 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None, 
 			pass
 	if roughlayer:
 		#Second Color Layer, masked by two Maxon noises, driving reflection roughness.
-		#Layer 1 = Stupl (overall scale 1.5), Layer 2 = Turbulence (overall scale 10).
+		#Layer 1 = Stupl (index 20, overall scale 1.5), Layer 2 = Turbulence (index 21, scale 10).
+		#Both layers are white and blend Add, so the noises add roughness on top of the base.
 		rlyr = mc.shadingNode('RedshiftColorLayer', asTexture=True, name=name + '_rsRoughLyr')
 		try:
 			mc.setAttr(rlyr + '.layer2_enable', 1)
 		except:
 			pass
-		for _lyr, _ntype, _nscale in [(1, 'Stupl', 1.5), (2, 'Turbulence', 10.0)]:
+		for _lyr, _ntype, _nscale in [(1, MAXON_NOISE['stupl'], 1.5), (2, MAXON_NOISE['turbulence'], 10.0)]:
+			try:
+				mc.setAttr('%s.layer%d_color' % (rlyr, _lyr), 1, 1, 1, type='double3')
+			except:
+				pass
+			if not any(_setEnumByName(rlyr, _b % _lyr, 'Add', warn=False) is not None
+					   for _b in ['layer%d_blend_mode', 'layer%d_blendmode', 'layer%d_mode']):
+				mc.warning('weeTools: could not set layer %d blend mode to Add on %s.' % (_lyr, rlyr))
 			rn = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name='%s_rsMaxonRough%d' % (name, _lyr))
 			_setNoiseType(rn, _ntype)
 			try:
@@ -629,7 +660,7 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None, 
 			pass
 	mc.select(sel_geo)
 def pbrBD(): _pbrMat(False, 'bump', colorlayer=True)
-def pbrTile(): _pbrMat(False, None, colorlayer=True, ss_weight=0.08, roughlayer=True)
+def pbrTile(): _pbrMat(False, None, colorlayer=True, ss_weight=0.09, roughlayer=True)
 
 def mat1():
 	import random as random

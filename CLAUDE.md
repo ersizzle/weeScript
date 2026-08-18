@@ -88,16 +88,26 @@ redundant/non-physical). Detail = a `RedshiftMaxonNoise` (Maxon noise, not Redsh
 `pbrTile()` ("PBR Tile" button) = `_pbrMat(False, None, colorlayer=True, ss_weight=0.08, roughlayer=True)`:
 - `detail=None` → NO bump/displacement branch and no `_rsMaxon` node at all (the bump rig was
   removed on purpose; `_pbrMat` guards node creation with `if detail:` / `elif detail:`).
-- `ss_weight=0.08` → subsurface weight on the standard material (tries `.ss_weight`,
+- `ss_weight=0.09` → subsurface weight on the standard material (tries `.ss_weight`,
   `.subsurface_weight`, `.ms_amount` in order).
 - `roughlayer=True` → a SECOND `RedshiftColorLayer` (`*_rsRoughLyr`), separate from the base_color
   one: `layer2_enable=1` (layer 1 is on by default), layer1 mask ← Maxon noise **Stupl** with
   `coord_scale_global` 1.5, layer2 mask ← Maxon noise **Turbulence** with `coord_scale_global` 10,
   then `rsRoughLyr.outColorR` → material `refl_roughness`.
-- `_setNoiseType(node, 'Stupl')` (module level) resolves a Maxon noise type by its UI NAME via
-  `mc.attributeQuery(..., listEnum=True)` instead of a hard-coded index — enum order differs
-  between Redshift builds, which is what made the old `noise_type=10  # Luka` fragile. `_pbrMat`'s
-  `noise_type` arg now accepts a string name or an int.
+  Both layers: `layer{n}_color` = white (1,1,1) and blend mode **Add**, so the noises add roughness
+  on top of the base instead of replacing it. Blend-mode attr name is probed
+  (`layer{n}_blend_mode` → `layer{n}_blendmode` → `layer{n}_mode`) and warns once if none stick.
+- **Maxon noise indices are pinned, NOT looked up by name.** `mc.attributeQuery('noise_type',
+  listEnum=True)` returns a list that does not line up with the actual Maxon noise dropdown on the
+  user's build — matching 'Stupl' and 'Turbulence' by name both landed on **Sema** in Maya.
+  Verified indices live in the module-level `MAXON_NOISE` dict: `stupl` = **20**, `turbulence` =
+  **21**. Add to that dict as more get confirmed in Maya; never trust the enum list.
+  `_setNoiseType(node, ntype)` takes an int index, or a name it resolves through `MAXON_NOISE`,
+  falling back to the unreliable name lookup only for unknown names.
+- `_setEnumByName(node, attr, label, warn=True)` (module level) resolves an enum attribute by UI
+  name via `attributeQuery(..., listEnum=True)`. Still used for the Color Layer blend mode ('Add').
+  **Given the noise_type mismatch above, treat this as unverified** — if blend mode comes out wrong
+  in Maya, pin its index the same way `MAXON_NOISE` does.
 
 `mat1()` (hotkey Ctrl+Shift+Q) and `matphong()` still exist and were NOT part of the matrix.
 Deleted earlier: `mat5`, `pbrd`, `pbrm`, and the 14 PRE-SHADING material presets + OCIO `aces()`.
