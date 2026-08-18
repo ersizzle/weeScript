@@ -447,9 +447,39 @@ def matphong():
 	mc.connectAttr(inputs + '.outColor', inputs + 'G.surfaceShader')
 	mc.sets(sel_geo, edit=True, forceElement=inputs + 'G')
 	mc.select (sel_geo[0])
-def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
-	#metal True=metallic / False=dielectric(IOR 1.5). detail='bump' or 'displace' (noise-driven). One shared material for the whole selection.
+def _setNoiseType(node, label):
+	#Set a RedshiftMaxonNoise .noise_type by its UI name ('Stupl', 'Turbulence', ...).
+	#The enum order differs between Redshift builds, so look the name up at runtime
+	#instead of hard-coding an index.  Returns the index used, or None.
+	names = []
+	try:
+		e = mc.attributeQuery('noise_type', node=node, listEnum=True)
+		if e:
+			names = e[0].split(':')
+	except:
+		pass
+	want = label.replace(' ', '').lower()
+	for i, nm in enumerate(names):
+		idx = i
+		if '=' in nm:
+			nm, _sep, v = nm.partition('=')
+			try:
+				idx = int(v)
+			except:
+				idx = i
+		if nm.replace(' ', '').lower() == want:
+			try:
+				mc.setAttr(node + '.noise_type', idx)
+				return idx
+			except:
+				return None
+	mc.warning('weeTools: Maxon noise type "%s" not found on %s.' % (label, node))
+	return None
+def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None, ss_weight=None, roughlayer=False):
+	#metal True=metallic / False=dielectric(IOR 1.5). detail='bump' or 'displace' (noise-driven) or None for no detail node at all. One shared material for the whole selection.
 	#colorlayer=True also builds a Maxon-noise + AO + Curvature network through a RedshiftColorLayer into base_color (layers 1 & 2 enabled).
+	#roughlayer=True builds a second RedshiftColorLayer masked by two Maxon noises (Stupl / Turbulence) driving refl_roughness.
+	#noise_type may be an int index or a UI name string ('Luka', 'Stupl', ...). ss_weight sets the material's subsurface weight.
 	import random
 	import colorsys
 	sel_geo = mc.ls(selection=True)
@@ -469,22 +499,33 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 			mc.setAttr(mat + '.refl_ior', 1.5)
 		except:
 			pass
+	if ss_weight is not None:
+		for _sattr in ['.ss_weight', '.subsurface_weight', '.ms_amount']:
+			try:
+				mc.setAttr(mat + _sattr, ss_weight)
+				break
+			except:
+				pass
 	sg = mc.sets(renderable=True, noSurfaceShader=True, empty=True, name=name + '_SG')
 	mc.connectAttr(mat + '.outColor', sg + '.surfaceShader', force=True)
 	mc.sets(sel_geo, edit=True, forceElement=sg)
-	noise = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name=name + '_rsMaxon')
-	if noise_type is not None:
-		try:
-			mc.setAttr(noise + '.noise_type', noise_type)
-		except:
-			pass
-	if noise_scale is None and detail == 'bump':
-		noise_scale = 4.0
-	if noise_scale is not None:
-		try:
-			mc.setAttr(noise + '.coord_scale_global', noise_scale)
-		except:
-			pass
+	if detail:
+		noise = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name=name + '_rsMaxon')
+		if noise_type is not None:
+			if isinstance(noise_type, str):
+				_setNoiseType(noise, noise_type)
+			else:
+				try:
+					mc.setAttr(noise + '.noise_type', noise_type)
+				except:
+					pass
+		if noise_scale is None and detail == 'bump':
+			noise_scale = 4.0
+		if noise_scale is not None:
+			try:
+				mc.setAttr(noise + '.coord_scale_global', noise_scale)
+			except:
+				pass
 	if detail == 'bump':
 		bump = mc.shadingNode('RedshiftBumpMap', asShader=True, name=name + '_rsBump')
 		mc.connectAttr(noise + '.outColor', bump + '.input', force=True)
@@ -497,7 +538,7 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 		except:
 			pass
 		mc.connectAttr(bump + '.out', mat + '.bump_input', force=True)
-	else:
+	elif detail:
 		disp = mc.shadingNode('RedshiftDisplacement', asShader=True, name=name + '_rsDispl')
 		mc.connectAttr(noise + '.outColor', disp + '.texMap', force=True)
 		try:
@@ -563,9 +604,32 @@ def _pbrMat(metal, detail, colorlayer=False, noise_type=None, noise_scale=None):
 			mc.connectAttr(curv + '.out', clr + '.layer2_mask', force=True)
 		except:
 			pass
+	if roughlayer:
+		#Second Color Layer, masked by two Maxon noises, driving reflection roughness.
+		#Layer 1 = Stupl (overall scale 1.5), Layer 2 = Turbulence (overall scale 10).
+		rlyr = mc.shadingNode('RedshiftColorLayer', asTexture=True, name=name + '_rsRoughLyr')
+		try:
+			mc.setAttr(rlyr + '.layer2_enable', 1)
+		except:
+			pass
+		for _lyr, _ntype, _nscale in [(1, 'Stupl', 1.5), (2, 'Turbulence', 10.0)]:
+			rn = mc.shadingNode('RedshiftMaxonNoise', asTexture=True, name='%s_rsMaxonRough%d' % (name, _lyr))
+			_setNoiseType(rn, _ntype)
+			try:
+				mc.setAttr(rn + '.coord_scale_global', _nscale)
+			except:
+				pass
+			try:
+				mc.connectAttr(rn + '.outColorR', '%s.layer%d_mask' % (rlyr, _lyr), force=True)
+			except:
+				pass
+		try:
+			mc.connectAttr(rlyr + '.outColorR', mat + '.refl_roughness', force=True)
+		except:
+			pass
 	mc.select(sel_geo)
 def pbrBD(): _pbrMat(False, 'bump', colorlayer=True)
-def pbrTile(): _pbrMat(False, 'bump', colorlayer=True, noise_type=10, noise_scale=0.93)  # 10 = Luka
+def pbrTile(): _pbrMat(False, None, colorlayer=True, ss_weight=0.08, roughlayer=True)
 
 def mat1():
 	import random as random
@@ -1172,7 +1236,7 @@ def showallobjects():
 def preserveedge():
 	sel = mc.ls(selection=True)
 	for i in sel:
-  		mc.setAttr (i+'Shape.osdFvarBoundary', 1)
+		mc.setAttr (i+'Shape.osdFvarBoundary', 1)
 def bokeh():
 	import maya.cmds as mc
 	locator1 = ('cameraLocator')
